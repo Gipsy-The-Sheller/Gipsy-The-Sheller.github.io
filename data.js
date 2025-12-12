@@ -35,7 +35,8 @@ async function loadData() {
                     "year": "2023",
                     "doi": "10.1234/jit.2023.001",
                     "url": "https://example.com/papers/LIT001",
-                    "abstract": "This paper describes a new species of butterfly discovered in the Amazon rainforest. The species belongs to the family Nymphalidae and is characterized by its distinctive wing coloration."
+                    "abstract": "This paper describes a new species of butterfly discovered in the Amazon rainforest. The species belongs to the family Nymphalidae and is characterized by its distinctive wing coloration.",
+                    "is_oa": true
                 },
                 {
                     "id": "LIT002",

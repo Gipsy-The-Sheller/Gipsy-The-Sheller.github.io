@@ -58,7 +58,10 @@
                                 >
                                     <div class="card-header">
                                         <span class="id-badge">LITid: {{ literature.id }}</span>
-                                        <h3 class="card-title">{{ literature.title }}</h3>
+                                        <h3 class="card-title">
+                                            <img v-if="literature.is_oa" src="open-access.svg" alt="Open Access" class="oa-icon">
+                                            {{ literature.title }}
+                                        </h3>
                                     </div>
                                     <div class="card-body">
                                         <p><strong>作者:</strong> {{ literature.authors }}</p>
