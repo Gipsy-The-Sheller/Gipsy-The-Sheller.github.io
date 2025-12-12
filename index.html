@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中国陆贝数据库II</title>
+    <title>中国陆贝数据库2.0</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="data.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
         <header class="header">
             <div class="container">
-                <h1>中国陆贝数据库II 分类学查看器</h1>
+                <h1>中国陆贝数据库2.0 分类学查看器</h1>
                 <nav class="navigation">
                     <button 
                         v-for="(tab, index) in tabs" 

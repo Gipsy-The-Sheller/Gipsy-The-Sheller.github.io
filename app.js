@@ -22,76 +22,89 @@ createApp({
             { id: 'about', name: '关于' }
         ];
 
+        // 初始化数据
+        const initData = () => {
+            // 使用示例数据初始化
+            literatureData.value = window.sampleData.literature || [];
+            taxonomyData.value = window.sampleData.taxonomy || [];
+            sampleData.value = window.sampleData.samples || [];
+        };
+
+        // 搜索算法实现
+        const searchInData = (data, searchTerm, fields) => {
+            if (!searchTerm) return data;
+            
+            const term = searchTerm.toLowerCase();
+            return data.filter(item => {
+                return fields.some(field => {
+                    const value = item[field];
+                    if (value === undefined || value === null) return false;
+                    return value.toString().toLowerCase().includes(term);
+                });
+            });
+        };
+
         // 获取文献数据
-        const fetchLiterature = async () => {
+        const fetchLiterature = () => {
             try {
                 loading.value = true;
-                const response = await fetch(`/api/literature?search=${encodeURIComponent(literatureSearch.value)}`);
-                if (response.ok) {
-                    literatureData.value = await response.json();
-                } else {
-                    console.error('获取文献数据失败:', response.status);
-                }
+                // 使用本地数据和搜索算法
+                literatureData.value = searchInData(
+                    window.sampleData.literature || [], 
+                    literatureSearch.value,
+                    ['id', 'title', 'authors', 'journal', 'year', 'doi', 'abstract']
+                );
             } catch (error) {
-                console.error('获取文献数据出错:', error);
+                console.error('处理文献数据出错:', error);
             } finally {
                 loading.value = false;
             }
         };
 
         // 获取分类数据
-        const fetchTaxonomy = async () => {
+        const fetchTaxonomy = () => {
             try {
                 loading.value = true;
-                const response = await fetch(`/api/taxonomy?search=${encodeURIComponent(taxonomySearch.value)}`);
-                if (response.ok) {
-                    taxonomyData.value = await response.json();
-                } else {
-                    console.error('获取分类数据失败:', response.status);
-                }
+                // 使用本地数据和搜索算法
+                taxonomyData.value = searchInData(
+                    window.sampleData.taxonomy || [], 
+                    taxonomySearch.value,
+                    ['id', 'name', 'level', 'type', 'lit_id', 'description']
+                );
             } catch (error) {
-                console.error('获取分类数据出错:', error);
+                console.error('处理分类数据出错:', error);
             } finally {
                 loading.value = false;
             }
         };
 
         // 获取样本数据
-        const fetchSamples = async () => {
+        const fetchSamples = () => {
             try {
                 loading.value = true;
-                const response = await fetch(`/api/samples?search=${encodeURIComponent(sampleSearch.value)}`);
-                if (response.ok) {
-                    sampleData.value = await response.json();
-                } else {
-                    console.error('获取样本数据失败:', response.status);
-                }
+                // 使用本地数据和搜索算法
+                sampleData.value = searchInData(
+                    window.sampleData.samples || [], 
+                    sampleSearch.value,
+                    ['id', 'tax_id', 'collector', 'latitude', 'longitude', 'description']
+                );
             } catch (error) {
-                console.error('获取样本数据出错:', error);
+                console.error('处理样本数据出错:', error);
             } finally {
                 loading.value = false;
             }
         };
 
-        // 生成ID
-        const generateId = async (type) => {
-            try {
-                const response = await fetch(`/api/generate-id/${type}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.id;
-                } else {
-                    console.error('生成ID失败:', response.status);
-                    return null;
-                }
-            } catch (error) {
-                console.error('生成ID出错:', error);
-                return null;
-            }
+        // 生成ID（仅用于演示，实际部署时需要后端支持）
+        const generateId = (type) => {
+            // 这里只是一个模拟的ID生成器
+            const prefix = type === 'literature' ? 'LIT' : type === 'taxonomy' ? 'TAX' : 'SMP';
+            return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
         };
 
         // 初始化数据获取
         onMounted(() => {
+            initData();
             fetchLiterature();
             fetchTaxonomy();
             fetchSamples();
@@ -122,7 +135,7 @@ createApp({
             selected_item_type.value = '';
         };
 
-        // 过滤后的数据（保留作为备选方案）
+        // 过滤后的数据
         const filteredLiterature = computed(() => {
             return literatureData.value;
         });
