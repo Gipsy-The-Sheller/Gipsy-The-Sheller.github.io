@@ -1,0 +1,18 @@
+[
+  {
+    "id": "SMP-7b0eb2cf-3859-49f1-b4c3-2fe8182596c9",
+    "tax_id": "TAX-23b2f8ab-42af-45fa-8c6c-24c465290dbe",
+    "collector": "陈德牛; 高家祥",
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "description": "IZ CAS / 正模标本"
+  },
+  {
+    "id": "SMP-892599f7-234a-4382-b4cf-6634308edfd8",
+    "tax_id": "TAX-23b2f8ab-42af-45fa-8c6c-24c465290dbe",
+    "collector": "陈德牛; 高家祥",
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "description": "IZ CAS / 副模标本"
+  }
+]

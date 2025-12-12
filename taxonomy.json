@@ -1,0 +1,29 @@
+[
+  {
+    "id": "TAX-23b2f8ab-42af-45fa-8c6c-24c465290dbe",
+    "name": "Stetonenia mirifica",
+    "level": "Species",
+    "type": "new taxon",
+    "lit_id": "LIT-d0047eba-0af0-4069-9b04-ebaabf13206c",
+    "parent_tax_id": null,
+    "description": "贝壳中等大小，壳质厚、坚实，呈肥胖的纺锤形，壳高约为壳宽的2倍。有7个螺层，前几个螺层增长缓慢，略膨胀；胚螺层常易缺损，倒数第二个螺层非常膨大，并扭转倒斜，体螺层急骤收缩、扭斜，形成一个狭长的管状颈部。在颈部上有粗糙而不规则的皱褶和肋棘。壳面呈黄褐色或栗褐色，无光泽，其上有无数斜行排列的生长线。壳顶为乳白色，有光泽。缝合线深。壳口呈椭圆形，口缘外折，翻卷而增厚，为白瓷釉色，光滑，其左上方有一突起。在壳口处可见较大的上板，以及下轴板和下板；螺旋板隐约可见。剖开上颈部，可见上板之上端与螺旋板相联；下板弯曲，与螺旋板相对应，形成一狭窄的通道。螺旋板与螺轴小柱相联而愈合。颚片为新月形，棕褐色、肥厚、边缘锐利，其中央部份有环纹。齿舌为角质，半月形，平均约有215横列，每一横列有中央齿1枚、侧齿13枚、外缘齿18枚。在各枚齿根处具有增厚的皱纹，而在每一侧齿旁有一小齿，每一缘齿两侧又各有一枚小齿。"
+  },
+  {
+    "id": "TAX-296d0c45-770e-4bb2-8304-5d6e717d36c3",
+    "name": "Grandinenia",
+    "level": "Genus",
+    "type": "new taxon",
+    "lit_id": "LIT-de571ac3-9429-447c-8730-dc0670a63ba3",
+    "parent_tax_id": "TAX-23b2f8ab-42af-45fa-8c6c-24c465290dbe",
+    "description": "Shell thick, obesely fusiform, with about 8 whorls, of which first two lustrous with the conical upper part of the spire. Penultimate whorl widest, much infated, while body whorl abruptly constricted, tortuous, forming a narrow neck, with coarse and irregular wrinkles. Principal plica and lunella well developed. Clausilium narrow, tapering toward a slenderly acute end and not excised near the filament."
+  },
+  {
+    "id": "TAX-60f5fbd7-56b3-47ee-ae9b-af1e3e8f622b",
+    "name": "Grandinenia mirifica",
+    "level": "Genus",
+    "type": "new combination",
+    "lit_id": "LIT-d0047eba-0af0-4069-9b04-ebaabf13206c",
+    "parent_tax_id": "TAX-23b2f8ab-42af-45fa-8c6c-24c465290dbe",
+    "description": "Shell medium in size, sinistral, thick, obesely fusiform and yellowish-brown in color. Surface with faint traces of fine striation and dull. Diameter about 2 times height and widest at the penultimate whorl. Body whorl abruptly constricted, tortuous, forming a narrow neck with somewhat irregular axial ribs, wrinkled behind the outer lip of aperture. Whorls 8 1/2 in number, convex, with shallow suture. Protoconch with 2 whorls, smooth, lustrous, pale yellowish and mamillated. Aperture nearly circular in outline and peristome continuous, well expanded, whitish glossy at the edge. Superior, inferior and subcolumellar lamellae visible in front view of the aperture. Superior lamella vertical, thin, rather strong and continuous with the spiral lamella. Inferior lamella developed, conspicuous and greatly spiral within. Subcolumellar lamella weakly emerging, but not reaching the peristome. Principal plica lateral, running from the middle of the right side nearly to the lip, where its inner end closely contiguous to the upper end of the lunella. Lunella dorso-lateral, well developed and strongly arched. Clausilium occupies the whole space between lunella and subcolumellar lamella. Subcolumellar lamella narrow, spindle-shaped, parallel-sided, acute at the distal end and not excised on the columellar side of the filament. Radula was reported by Chen & Gao (1982). Genitalia are unknown."
+  }
+]
