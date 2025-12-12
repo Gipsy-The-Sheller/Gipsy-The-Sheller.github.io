@@ -22,12 +22,33 @@ createApp({
             { id: 'about', name: '关于' }
         ];
 
+        // 等待数据加载完成
+        const waitForData = () => {
+            return new Promise(resolve => {
+                const checkData = () => {
+                    if (window.sampleData) {
+                        resolve(window.sampleData);
+                    } else {
+                        setTimeout(checkData, 100);
+                    }
+                };
+                checkData();
+            });
+        };
+
         // 初始化数据
-        const initData = () => {
-            // 使用示例数据初始化
-            literatureData.value = window.sampleData.literature || [];
-            taxonomyData.value = window.sampleData.taxonomy || [];
-            sampleData.value = window.sampleData.samples || [];
+        const initData = async () => {
+            try {
+                loading.value = true;
+                await waitForData();
+                literatureData.value = window.sampleData.literature || [];
+                taxonomyData.value = window.sampleData.taxonomy || [];
+                sampleData.value = window.sampleData.samples || [];
+            } catch (error) {
+                console.error('初始化数据出错:', error);
+            } finally {
+                loading.value = false;
+            }
         };
 
         // 搜索算法实现
@@ -45,9 +66,10 @@ createApp({
         };
 
         // 获取文献数据
-        const fetchLiterature = () => {
+        const fetchLiterature = async () => {
             try {
                 loading.value = true;
+                await waitForData();
                 // 使用本地数据和搜索算法
                 literatureData.value = searchInData(
                     window.sampleData.literature || [], 
@@ -62,9 +84,10 @@ createApp({
         };
 
         // 获取分类数据
-        const fetchTaxonomy = () => {
+        const fetchTaxonomy = async () => {
             try {
                 loading.value = true;
+                await waitForData();
                 // 使用本地数据和搜索算法
                 taxonomyData.value = searchInData(
                     window.sampleData.taxonomy || [], 
@@ -79,9 +102,10 @@ createApp({
         };
 
         // 获取样本数据
-        const fetchSamples = () => {
+        const fetchSamples = async () => {
             try {
                 loading.value = true;
+                await waitForData();
                 // 使用本地数据和搜索算法
                 sampleData.value = searchInData(
                     window.sampleData.samples || [], 
@@ -103,11 +127,11 @@ createApp({
         };
 
         // 初始化数据获取
-        onMounted(() => {
-            initData();
-            fetchLiterature();
-            fetchTaxonomy();
-            fetchSamples();
+        onMounted(async () => {
+            await initData();
+            await fetchLiterature();
+            await fetchTaxonomy();
+            await fetchSamples();
         });
 
         // 监听搜索变化
