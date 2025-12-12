@@ -270,6 +270,13 @@ body {
   margin: 0 0 10px 0;
 }
 
+.oa-icon {
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
 .card-body {
   padding: 20px;
 }
