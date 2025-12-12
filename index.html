@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国陆贝数据库II</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>中国陆贝数据库II 分类学查看器</h1>
+                <nav class="navigation">
+                    <button 
+                        v-for="(tab, index) in tabs" 
+                        :key="index"
+                        :class="{ active: activeTab === tab.id }"
+                        @click="activeTab = tab.id"
+                    >
+                        {{ tab.name }}
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="content-wrapper">
+                    <!-- 主内容区 -->
+                    <div class="main-panel" :class="{ 'with-sidebar': selected_item }">
+                        <!-- 文献列表 -->
+                        <div v-if="activeTab === 'literature'" class="tab-content">
+                            <div class="section-header">
+                                <h2>文献列表</h2>
+                                <div class="search-box">
+                                    <input 
+                                        type="text" 
+                                        placeholder="搜索文献..." 
+                                        v-model="literatureSearch"
+                                        @input="onLiteratureSearch"
+                                        class="search-input"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div v-if="loading" class="loading">加载中...</div>
+                            
+                            <div class="card-grid">
+                                <div 
+                                    v-for="literature in filteredLiterature" 
+                                    :key="literature.id"
+                                    class="card"
+                                    :class="{ 'selected': selected_item && selected_item.id === literature.id }"
+                                    @click="selectItem(literature, 'literature')"
+                                >
+                                    <div class="card-header">
+                                        <span class="id-badge">LITid: {{ literature.id }}</span>
+                                        <h3 class="card-title">{{ literature.title }}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>作者:</strong> {{ literature.authors }}</p>
+                                        <p><strong>期刊:</strong> {{ literature.journal }}</p>
+                                        <p><strong>年份:</strong> {{ literature.year }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分类列表 -->
+                        <div v-if="activeTab === 'taxonomy'" class="tab-content">
+                            <div class="section-header">
+                                <h2>分类列表</h2>
+                                <div class="search-box">
+                                    <input 
+                                        type="text" 
+                                        placeholder="搜索分类..." 
+                                        v-model="taxonomySearch"
+                                        @input="onTaxonomySearch"
+                                        class="search-input"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div v-if="loading" class="loading">加载中...</div>
+                            
+                            <div class="card-grid">
+                                <div 
+                                    v-for="taxon in filteredTaxonomy" 
+                                    :key="taxon.id"
+                                    class="card"
+                                    :class="{ 'selected': selected_item && selected_item.id === taxon.id }"
+                                    @click="selectItem(taxon, 'taxonomy')"
+                                >
+                                    <div class="card-header">
+                                        <span class="id-badge">TAXid: {{ taxon.id }}</span>
+                                        <h3 class="card-title">{{ taxon.name }}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>级别:</strong> {{ taxon.level }}</p>
+                                        <p><strong>类型:</strong> {{ taxon.type }}</p>
+                                        <p><strong>文献ID:</strong> {{ taxon.lit_id }}</p>
+                                        <p v-if="taxon.parent_tax_id"><strong>继承TAXid:</strong> {{ taxon.parent_tax_id }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 样本列表 -->
+                        <div v-if="activeTab === 'samples'" class="tab-content">
+                            <div class="section-header">
+                                <h2>样本列表</h2>
+                                <div class="search-box">
+                                    <input 
+                                        type="text" 
+                                        placeholder="搜索样本..." 
+                                        v-model="sampleSearch"
+                                        @input="onSampleSearch"
+                                        class="search-input"
+                                    >
+                                </div>
+                            </div>
+                            
+                            <div v-if="loading" class="loading">加载中...</div>
+                            
+                            <div class="card-grid">
+                                <div 
+                                    v-for="sample in filteredSamples" 
+                                    :key="sample.id"
+                                    class="card"
+                                    :class="{ 'selected': selected_item && selected_item.id === sample.id }"
+                                    @click="selectItem(sample, 'sample')"
+                                >
+                                    <div class="card-header">
+                                        <span class="id-badge">SMPid: {{ sample.id }}</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>分类ID:</strong> {{ sample.tax_id }}</p>
+                                        <p><strong>采集者:</strong> {{ sample.collector }}</p>
+                                        <p><strong>纬度:</strong> {{ sample.latitude }}</p>
+                                        <p><strong>经度:</strong> {{ sample.longitude }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 关于页面 -->
+                        <div v-if="activeTab === 'about'" class="tab-content">
+                            <div class="about-page">
+                                <div class="business-card">
+                                    <h1>徐志杰</h1>
+                                    <p class="affiliation">东华大学 生物与医学工程学院</p>
+                                    <p class="links">
+                                        <a href="https://github.com/Gipsy-The-Sheller" target="_blank">GitHub 主页</a>
+                                    </p>
+                                    <div class="tags">
+                                        <span class="tag">陆生贝类分类</span>
+                                        <span class="tag">分子系统发生学</span>
+                                        <span class="tag">生物信息学</span>
+                                        <span class="tag">计算生物学</span>
+                                    </div>
+                                </div>
+                                
+                                <h2>关于分类学管理系统</h2>
+                                
+                                <div class="about-section">
+                                    <h3>系统概述</h3>
+                                    <p>分类学管理系统是一个专门为生物分类学研究设计的数据管理工具。该系统参考了国际知名的生物多样性数据平台 EMBL-EBI Webin 和 GBIF 的设计理念，实现了文献（LITid）—分类（TAXid）—样本（SMPid）三级数据管理体系。</p>
+                                </div>
+                                
+                                <div class="about-section">
+                                    <h3>核心功能</h3>
+                                    <div class="feature-grid">
+                                        <div class="feature-card">
+                                            <h4>文献管理 (LITid)</h4>
+                                            <p>管理与分类学研究相关的学术文献，包括标题、作者、期刊、年份、DOI、URL 和摘要等信息。</p>
+                                        </div>
+                                        <div class="feature-card">
+                                            <h4>分类管理 (TAXid)</h4>
+                                            <p>维护生物分类体系，支持从门到种的各级分类单元，记录分类学处理类型和相关文献。</p>
+                                        </div>
+                                        <div class="feature-card">
+                                            <h4>样本管理 (SMPid)</h4>
+                                            <p>记录实地采集的标本信息，包括地理位置坐标、采集者和所属分类单元。</p>
+                                        </div>
+                                        <div class="feature-card">
+                                            <h4>数据关联</h4>
+                                            <p>建立文献、分类和样本之间的关联关系，形成完整的分类学研究数据链。</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="about-section">
+                                    <h3>技术特色</h3>
+                                    <ul>
+                                        <li><strong>唯一标识符：</strong>使用 UUID 技术为每条记录生成全局唯一标识符</li>
+                                        <li><strong>响应式设计：</strong>适配桌面端和移动端等各种设备屏幕</li>
+                                        <li><strong>双界面操作：</strong>提供桌面应用程序和网页界面两种操作方式</li>
+                                        <li><strong>实时搜索：</strong>支持对所有字段的实时搜索和过滤</li>
+                                        <li><strong>数据持久化：</strong>采用 JSON 格式存储数据，便于备份和迁移</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="about-section">
+                                    <h3>使用场景</h3>
+                                    <p>本系统适用于各类生物分类学研究机构、自然历史博物馆、植物标本馆、动物标本馆等需要管理大量分类学数据的单位，也可供个人研究者用于整理和管理自己的分类学研究成果。</p>
+                                </div>
+                                
+                                <div class="about-section">
+                                    <h3>开发信息</h3>
+                                    <p>本系统采用现代化的前后端分离架构，前端使用 Vue3 框架，后端采用 Flask 框架，桌面应用程序基于 PyQt5 开发。整个系统具有良好的可扩展性和维护性。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧详情面板 -->
+                    <div v-if="selected_item && activeTab !== 'about'" class="sidebar-panel">
+                        <div class="sidebar-header">
+                            <h2>详细信息</h2>
+                            <button class="close-btn" @click="deselectItem">×</button>
+                        </div>
+                        
+                        <div class="sidebar-content">
+                            <!-- 文献详情 -->
+                            <div v-if="selected_item_type === 'literature'">
+                                <h3>{{ selected_item.title }}</h3>
+                                <div class="detail-item">
+                                    <label>ID:</label>
+                                    <span>{{ selected_item.id }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>作者:</label>
+                                    <span>{{ selected_item.authors }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>期刊:</label>
+                                    <span>{{ selected_item.journal }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>年份:</label>
+                                    <span>{{ selected_item.year }}</span>
+                                </div>
+                                <div v-if="selected_item.doi" class="detail-item">
+                                    <label>DOI:</label>
+                                    <span><a :href="'https://doi.org/' + selected_item.doi" target="_blank">{{ selected_item.doi }}</a></span>
+                                </div>
+                                <div v-if="selected_item.url" class="detail-item">
+                                    <label>URL:</label>
+                                    <span><a :href="selected_item.url" target="_blank">{{ selected_item.url }}</a></span>
+                                </div>
+                                <div v-if="selected_item.abstract" class="detail-item">
+                                    <label>摘要:</label>
+                                    <p>{{ selected_item.abstract }}</p>
+                                </div>
+                            </div>
+
+                            <!-- 分类详情 -->
+                            <div v-if="selected_item_type === 'taxonomy'">
+                                <h3>{{ selected_item.name }}</h3>
+                                <div class="detail-item">
+                                    <label>ID:</label>
+                                    <span>{{ selected_item.id }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>级别:</label>
+                                    <span>{{ selected_item.level }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>类型:</label>
+                                    <span>{{ selected_item.type }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>文献ID:</label>
+                                    <span>{{ selected_item.lit_id }}</span>
+                                </div>
+                                <div v-if="selected_item.parent_tax_id" class="detail-item">
+                                    <label>继承TAXid:</label>
+                                    <span>{{ selected_item.parent_tax_id }}</span>
+                                </div>
+                                <div v-if="selected_item.description" class="detail-item">
+                                    <label>描述:</label>
+                                    <p>{{ selected_item.description }}</p>
+                                </div>
+                            </div>
+
+                            <!-- 样本详情 -->
+                            <div v-if="selected_item_type === 'sample'">
+                                <h3>样本 {{ selected_item.id }}</h3>
+                                <div class="detail-item">
+                                    <label>ID:</label>
+                                    <span>{{ selected_item.id }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>分类ID:</label>
+                                    <span>{{ selected_item.tax_id }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>采集者:</label>
+                                    <span>{{ selected_item.collector }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>纬度:</label>
+                                    <span>{{ selected_item.latitude }}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>经度:</label>
+                                    <span>{{ selected_item.longitude }}</span>
+                                </div>
+                                <div v-if="selected_item.description" class="detail-item">
+                                    <label>描述:</label>
+                                    <p>{{ selected_item.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 中国陆贝数据库.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
