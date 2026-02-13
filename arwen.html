@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARWEN - tRNA 基因检测工具</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ARWEN 特定样式 */
+        .arwen-container {
+            background-color: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            padding: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--gbif-medium-gray);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background-color: var(--gbif-light-gray);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 25px;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--gbif-green);
+            background-color: rgba(154, 184, 61, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--gbif-green);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--gbif-text);
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            color: var(--gbif-dark-gray);
+            font-size: 0.9em;
+        }
+
+        .options-section {
+            margin-bottom: 25px;
+        }
+
+        .options-section h3 {
+            color: var(--gbif-green);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--gbif-medium-gray);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .option-group {
+            background-color: var(--gbif-light-gray);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--gbif-medium-gray);
+        }
+
+        .option-group h4 {
+            color: var(--gbif-text);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--gbif-text);
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: var(--gbif-green);
+            width: 18px;
+            height: 18px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--gbif-text);
+            font-size: 0.95rem;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 10px;
+            accent-color: var(--gbif-green);
+            width: 18px;
+            height: 18px;
+        }
+
+        .select-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gbif-medium-gray);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            background-color: var(--gbif-white);
+            cursor: pointer;
+        }
+
+        .select-group select:focus {
+            outline: none;
+            border-color: var(--gbif-green);
+            box-shadow: 0 0 0 2px rgba(154, 184, 61, 0.2);
+        }
+
+        .run-button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--gbif-shadow);
+            font-weight: 600;
+        }
+
+        .run-button:hover:not(:disabled) {
+            background-color: var(--gbif-dark-green);
+            transform: translateY(-2px);
+            box-shadow: var(--gbif-shadow-hover);
+        }
+
+        .run-button:disabled {
+            background-color: var(--gbif-medium-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .output-section {
+            background-color: #1e1e1e;
+            border-radius: 6px;
+            padding: 20px;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: var(--gbif-shadow);
+            position: relative;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .output-title {
+            color: #9acc3d;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .copy-button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background-color: var(--gbif-dark-green);
+        }
+
+        .status-bar {
+            padding: 15px 20px;
+            background-color: var(--gbif-light-gray);
+            border-top: 1px solid var(--gbif-medium-gray);
+            border-radius: 6px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--gbif-medium-gray);
+        }
+
+        .status-indicator.ready {
+            background-color: #4caf50;
+        }
+
+        .status-indicator.processing {
+            background-color: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.error {
+            background-color: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .file-info {
+            color: var(--gbif-dark-gray);
+            font-size: 0.9em;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--gbif-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .arwen-header {
+            margin-bottom: 30px;
+        }
+
+        .arwen-header h2 {
+            color: var(--gbif-green);
+            font-size: 2rem;
+            margin: 0 0 10px 0;
+        }
+
+        .arwen-header p {
+            color: var(--gbif-text);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* 源代码展示 */
+        .code-container {
+            background-color: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            padding: 30px;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .code-header h2 {
+            color: var(--gbif-green);
+            margin: 0;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-actions button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .code-actions button:hover {
+            background-color: var(--gbif-dark-green);
+        }
+
+        .code-section {
+            margin-bottom: 30px;
+        }
+
+        .code-section h3 {
+            color: var(--gbif-text);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--gbif-medium-gray);
+        }
+
+        .code-block {
+            background-color: #f5f5f5;
+            border: 1px solid var(--gbif-medium-gray);
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .compile-command {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+
+        .language-switch {
+            display: flex;
+            gap: 10px;
+        }
+
+        .language-switch button {
+            background: none;
+            border: 1px solid var(--gbif-medium-gray);
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-switch button.active {
+            background-color: var(--gbif-green);
+            color: white;
+            border-color: var(--gbif-green);
+        }
+
+        .language-switch button:hover:not(.active) {
+            background-color: var(--gbif-light-gray);
+        }
+
+        /* 广告横幅 */
+        .ad-banner {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--gbif-text);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--gbif-green);
+        }
+
+        .ad-banner a {
+            color: var(--gbif-green);
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .ad-banner a:hover {
+            text-decoration: underline;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>ARWEN WebAssembly</h1>
+                <nav class="navigation">
+                    <button :class="{ active: activeTab === 'main' }" @click="activeTab = 'main'">
+                        {{ t('tabs.main') }}
+                    </button>
+                    <button :class="{ active: activeTab === 'source' }" @click="activeTab = 'source'">
+                        {{ t('tabs.source') }}
+                    </button>
+                    <button :class="{ active: activeTab === 'about' }" @click="activeTab = 'about'">
+                        {{ t('tabs.about') }}
+                    </button>
+                    <div class="language-switch">
+                        <button :class="{ active: language === 'zh' }" @click="language = 'zh'">中文</button>
+                        <button :class="{ active: language === 'en' }" @click="language = 'en'">English</button>
+                    </div>
+                    <a href="index.html" class="navigation-link">{{ t('tabs.home') }}</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <!-- ARWEN 主页面 -->
+                <div v-if="activeTab === 'main'" class="arwen-container">
+                    <div class="arwen-header">
+                        <div class="ad-banner">
+                            {{ t('ad.text') }} 
+                            <a href="https://github.com/Gipsy-The-Sheller/YR-MPE" target="_blank">{{ t('ad.github') }}</a> | 
+                            <a href="https://gitee.com/ZJXMolls/YR-MPE" target="_blank">{{ t('ad.gitee') }}</a>
+                        </div>
+                        <h2>{{ t('title') }}</h2>
+                        <p>{{ t('subtitle') }}</p>
+                        <p style="font-size: 0.9em; margin-top: 10px; color: var(--gbif-dark-gray);">
+                            {{ t('reference') }}
+                        </p>
+                    </div>
+
+                    <div class="upload-area" 
+                         id="uploadArea" 
+                         :class="{ dragover: isDragover }"
+                         @dragover.prevent="isDragover = true"
+                         @dragleave.prevent="isDragover = false"
+                         @drop.prevent="handleDrop"
+                         @click="$refs.fileInput.click()">
+                        <input type="file" ref="fileInput" accept=".fasta,.fa,.txt" @change="handleFileSelect" style="display: none;">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">{{ t('upload.text') }}</div>
+                        <div class="upload-hint">{{ t('upload.hint') }}</div>
+                    </div>
+
+                    <div class="options-section">
+                        <h3>{{ t('options.title') }}</h3>
+                        <div class="options-grid">
+                            <div class="option-group">
+                                <h4>{{ t('options.topology') }}</h4>
+                                <div class="radio-group">
+                                    <label>
+                                        <input type="radio" v-model="options.topology" value="circular">
+                                        {{ t('options.circular') }}
+                                    </label>
+                                    <label>
+                                        <input type="radio" v-model="options.topology" value="linear">
+                                        {{ t('options.linear') }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.strand') }}</h4>
+                                <div class="radio-group">
+                                    <label>
+                                        <input type="radio" v-model="options.strand" value="both">
+                                        {{ t('options.both') }}
+                                    </label>
+                                    <label>
+                                        <input type="radio" v-model="options.strand" value="sense">
+                                        {{ t('options.sense') }}
+                                    </label>
+                                    <label>
+                                        <input type="radio" v-model="options.strand" value="antisense">
+                                        {{ t('options.antisense') }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.geneticCode') }}</h4>
+                                <div class="select-group">
+                                    <select v-model="options.geneticCode">
+                                        <option value="metazoan">{{ t('geneticCodes.metazoan') }}</option>
+                                        <option value="vertebrate">{{ t('geneticCodes.vertebrate') }}</option>
+                                        <option value="invertebrate">{{ t('geneticCodes.invertebrate') }}</option>
+                                        <option value="standard">{{ t('geneticCodes.standard') }}</option>
+                                        <option value="mammalian">{{ t('geneticCodes.mammalian') }}</option>
+                                        <option value="yeast">{{ t('geneticCodes.yeast') }}</option>
+                                        <option value="protozoan">{{ t('geneticCodes.protozoan') }}</option>
+                                        <option value="ciliate">{{ t('geneticCodes.ciliate') }}</option>
+                                        <option value="flatworm">{{ t('geneticCodes.flatworm') }}</option>
+                                        <option value="euplotid">{{ t('geneticCodes.euplotid') }}</option>
+                                        <option value="bacterial">{{ t('geneticCodes.bacterial') }}</option>
+                                        <option value="alt-yeast">{{ t('geneticCodes.altYeast') }}</option>
+                                        <option value="ascidian">{{ t('geneticCodes.ascidian') }}</option>
+                                        <option value="alt-flatworm">{{ t('geneticCodes.altFlatworm') }}</option>
+                                        <option value="blepharisma">{{ t('geneticCodes.blepharisma') }}</option>
+                                        <option value="chlorophycean">{{ t('geneticCodes.chlorophycean') }}</option>
+                                        <option value="trematode">{{ t('geneticCodes.trematode') }}</option>
+                                        <option value="scenedesmus">{{ t('geneticCodes.scenedesmus') }}</option>
+                                        <option value="thraustochytrium">{{ t('geneticCodes.thraustochytrium') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.detection') }}</h4>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" v-model="options.tvloop">
+                                        {{ t('options.tvloop') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.cloop7">
+                                        {{ t('options.cloop7') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.reportPseudo">
+                                        {{ t('options.reportPseudo') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.mtx">
+                                        {{ t('options.mtx') }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.output') }}</h4>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" v-model="options.verbose">
+                                        {{ t('options.verbose') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.showSeq">
+                                        {{ t('options.showSeq') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.showStructure">
+                                        {{ t('options.showStructure') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.fasta">
+                                        {{ t('options.fasta') }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.other') }}</h4>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" v-model="options.batch">
+                                        {{ t('options.batch') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.matchAcceptor">
+                                        {{ t('options.matchAcceptor') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.config">
+                                        {{ t('options.config') }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <button class="run-button" 
+                                @click="runARWEN" 
+                                :disabled="!selectedFile || !moduleLoaded || isProcessing">
+                            {{ isProcessing ? t('processing') : t('run') }}
+                        </button>
+                    </div>
+
+                    <div class="output-section" id="output">
+                        <div class="output-header">
+                            <h3 class="output-title">{{ t('output.title') }}</h3>
+                            <button class="copy-button" @click="copyOutput" v-if="output">
+                                {{ t('output.copy') }}
+                            </button>
+                        </div>
+                        <pre>{{ output || t('output.waiting') }}</pre>
+                    </div>
+
+                    <div class="status-bar">
+                        <div class="status">
+                            <div class="status-indicator" :class="statusClass"></div>
+                            <span>{{ statusText }}</span>
+                        </div>
+                        <div class="file-info">
+                            {{ selectedFile ? `${selectedFile.name} (${formatFileSize(selectedFile.size)})` : t('status.noFile') }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 源代码页面 -->
+                <div v-if="activeTab === 'source'" class="code-container">
+                    <div class="code-header">
+                        <h2>{{ t('source.title') }}</h2>
+                        <div class="code-actions">
+                            <button @click="downloadSource">{{ t('source.downloadC') }}</button>
+                            <button @click="downloadWasm">{{ t('source.downloadWasm') }}</button>
+                        </div>
+                    </div>
+
+                    <div class="code-section">
+                        <h3>{{ t('source.compileCommand') }}</h3>
+                        <div class="compile-command">
+emcc arwen.c -o arwen.js -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s IMPORTED_MEMORY -s STACK_SIZE=1048576 -s EXPORTED_RUNTIME_METHODS="['cwrap','callMain','UTF8ToString','stringToUTF8','getValue','setValue','HEAP8','HEAP16','HEAP32','HEAPU8','HEAPU16','HEAPU32','HEAPF32','HEAPF64']" -s EXPORTED_FUNCTIONS="['_main','_malloc','_free']" -s FILESYSTEM=1 -s FORCE_FILESYSTEM=1
+                        </div>
+                    </div>
+
+                    <div class="code-section">
+                        <h3>{{ t('source.sourceCode') }}</h3>
+                        <div class="code-block">
+                            <pre ref="sourceCodeRef">{{ sourceCodePreview }}</pre>
+                        </div>
+                        <p style="margin-top: 10px; color: var(--gbif-dark-gray);">
+                            {{ t('source.note') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 关于页面 -->
+                <div v-if="activeTab === 'about'" class="about-page">
+                    <div class="business-card">
+                        <h1>徐志杰</h1>
+                        <p class="affiliation">东华大学 生物与医学工程学院</p>
+                        <p class="links">
+                            <a href="https://github.com/Gipsy-The-Sheller" target="_blank">GitHub 主页</a>
+                        </p>
+                        <div class="tags">
+                            <span class="tag">陆生贝类分类</span>
+                            <span class="tag">分子系统发生学</span>
+                            <span class="tag">生物信息学</span>
+                            <span class="tag">计算生物学</span>
+                        </div>
+                    </div>
+                    
+                    <h2>{{ t('about.title') }}</h2>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.overview') }}</h3>
+                        <p>{{ t('about.overviewText') }}</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.features') }}</h3>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature1Title') }}</h4>
+                                <p>{{ t('about.feature1Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature2Title') }}</h4>
+                                <p>{{ t('about.feature2Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature3Title') }}</h4>
+                                <p>{{ t('about.feature3Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature4Title') }}</h4>
+                                <p>{{ t('about.feature4Text') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.tech') }}</h3>
+                        <ul>
+                            <li><strong>{{ t('about.tech1') }}:</strong> {{ t('about.tech1Text') }}</li>
+                            <li><strong>{{ t('about.tech2') }}:</strong> {{ t('about.tech2Text') }}</li>
+                            <li><strong>{{ t('about.tech3') }}:</strong> {{ t('about.tech3Text') }}</li>
+                            <li><strong>{{ t('about.tech4') }}:</strong> {{ t('about.tech4Text') }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 徐志杰 | ARWEN WebAssembly {{ t('version') }}</p>
+            </div>
+        </footer>
+
+        <!-- 加载覆盖层 -->
+        <div v-if="isProcessing" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ t('processing') }}...</div>
+        </div>
+    </div>
+
+    <!-- 加载 ARWEN WebAssembly 模块 -->
+    <script>
+        // Module 配置
+        var Module = {
+            noInitialRun: true,
+            print: function(text) {
+                console.log(text);
+                if (window.app) {
+                    window.app.appendOutput(text);
+                }
+            },
+            printErr: function(text) {
+                console.error(text);
+                if (window.app) {
+                    window.app.appendOutput(text);
+                }
+            },
+            onRuntimeInitialized: function() {
+                console.log('WASM 模块加载完成');
+                if (window.app) {
+                    window.app.moduleLoaded = true;
+                    window.app.statusText = window.app.t('status.loaded');
+                }
+            },
+            onAbort: function(what) {
+                console.error('WASM 执行中止:', what);
+                if (window.app) {
+                    window.app.statusClass = 'error';
+                    window.app.statusText = window.app.t('status.aborted');
+                    window.app.output = window.app.t('status.abortedText') + what;
+                }
+            }
+        };
+    </script>
+    <script src="arwen.js"></script>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'main',
+                    selectedFile: null,
+                    isDragover: false,
+                    output: '',
+                    moduleLoaded: false,
+                    isProcessing: false,
+                    statusText: '',
+                    statusClass: '',
+                    language: 'zh',
+                    sourceCodePreview: '',
+                    options: {
+                        topology: 'circular',
+                        strand: 'both',
+                        geneticCode: 'metazoan',
+                        tvloop: true,
+                        cloop7: false,
+                        reportPseudo: false,
+                        mtx: false,
+                        verbose: false,
+                        showSeq: false,
+                        showStructure: false,
+                        fasta: false,
+                        batch: false,
+                        matchAcceptor: false,
+                        config: false
+                    },
+                    translations: {
+                        zh: {
+                            tabs: {
+                                main: '主页',
+                                source: '源代码',
+                                about: '关于',
+                                home: '返回主页'
+                            },
+                            title: 'ARWEN - tRNA 基因检测工具',
+                            subtitle: '检测后生动物线粒体 tRNA 基因',
+                            reference: '参考文献: Laslett, D. and Canback, B. (2008) Bioinformatics, 24(2); 172-175',
+                            ad: {
+                                text: '使用 YR-MPE 无缝进行更多线粒体系统发育分析！',
+                                github: 'GitHub',
+                                gitee: 'Gitee'
+                            },
+                            upload: {
+                                text: '点击选择文件或拖放文件到此处',
+                                hint: '支持 .fasta, .fa, .txt 格式'
+                            },
+                            options: {
+                                title: '参数选项',
+                                topology: '拓扑结构',
+                                circular: '环形（默认）',
+                                linear: '线性',
+                                strand: '搜索链',
+                                both: '双链（默认）',
+                                sense: '正链',
+                                antisense: '反链',
+                                geneticCode: '遗传密码表',
+                                detection: '检测选项',
+                                output: '输出格式',
+                                other: '其他选项',
+                                tvloop: '搜索 TV 替换环 tRNA',
+                                cloop7: '仅搜索 7 碱基 C 环',
+                                reportPseudo: '报告可能的假基因',
+                                mtx: '低评分 tRNA 不报告',
+                                verbose: '详细模式',
+                                showSeq: '显示序列',
+                                showStructure: '显示二级结构',
+                                fasta: 'FASTA 格式',
+                                batch: '批处理模式',
+                                matchAcceptor: '氨酰基受体匹配',
+                                config: '显示配置信息'
+                            },
+                            geneticCodes: {
+                                metazoan: '后生动物线粒体（默认）',
+                                vertebrate: '脊椎动物线粒体',
+                                invertebrate: '无脊椎动物线粒体',
+                                standard: '标准',
+                                mammalian: '哺乳动物线粒体',
+                                yeast: '酵母线粒体',
+                                protozoan: '原生动物线粒体',
+                                ciliate: '纤毛虫',
+                                flatworm: '扁形动物线粒体',
+                                euplotid: 'Euplotid',
+                                bacterial: '细菌/植物叶绿体',
+                                altYeast: '替代酵母',
+                                ascidian: '海鞘线粒体',
+                                altFlatworm: '替代扁形动物线粒体',
+                                blepharisma: 'Blepharisma',
+                                chlorophycean: '绿藻线粒体',
+                                trematode: '吸虫线粒体',
+                                scenedesmus: 'Scenedesmus obliquus',
+                                thraustochytrium: 'Thraustochytrium'
+                            },
+                            run: '运行 ARWEN',
+                            processing: '处理中',
+                            output: {
+                                title: '输出结果',
+                                copy: '复制日志',
+                                copied: '已复制',
+                                failed: '复制失败',
+                                waiting: '等待输入...'
+                            },
+                            status: {
+                                loaded: 'WASM 模块已加载',
+                                aborted: 'WASM 执行中止',
+                                abortedText: '执行中止: ',
+                                noFile: '未选择文件'
+                            },
+                            source: {
+                                title: 'ARWEN 源代码',
+                                downloadC: '下载 arwen.c',
+                                downloadWasm: '下载 WebAssembly 文件',
+                                compileCommand: '编译命令',
+                                sourceCode: '源代码预览',
+                                note: '点击上方按钮下载完整源代码'
+                            },
+                            about: {
+                                title: '关于 ARWEN',
+                                overview: '工具概述',
+                                overviewText: 'ARWEN (A program to detect tRNA genes in metazoan mitochondrial nucleotide sequences) 是一个专门用于检测后生动物线粒体基因组中 tRNA 基因的生物信息学工具。该工具由 Dean Laslett 和 Björn Canbäck 开发，于 2008 年发表在 Bioinformatics 期刊上。',
+                                features: '核心功能',
+                                feature1Title: 'tRNA 基因检测',
+                                feature1Text: '自动识别线粒体基因组中的 tRNA 基因，包括标准 tRNA 和 TV 替换环 tRNA',
+                                feature2Title: '二级结构预测',
+                                feature2Text: '预测并显示 tRNA 的二级结构，包括茎环结构和碱基配对',
+                                feature3Title: '多遗传密码表支持',
+                                feature3Text: '支持多种线粒体遗传密码表，适用于不同物种的 tRNA 检测',
+                                feature4Title: '灵活参数配置',
+                                feature4Text: '提供丰富的参数选项，可根据研究需求调整检测策略',
+                                tech: '技术特色',
+                                tech1: 'WebAssembly 实现',
+                                tech1Text: '通过 Emscripten 将 C 语言代码编译为 WebAssembly，在浏览器中直接运行',
+                                tech2: '高性能计算',
+                                tech2Text: '优化了内存管理，支持处理大型线粒体基因组',
+                                tech3: '响应式界面',
+                                tech3Text: '采用 Vue3 框架，提供流畅的用户体验',
+                                tech4: '实时反馈',
+                                tech4Text: '提供详细的输出信息和状态反馈'
+                            },
+                            version: '版本'
+                        },
+                        en: {
+                            tabs: {
+                                main: 'Main',
+                                source: 'Source',
+                                about: 'About',
+                                home: 'Back to Home'
+                            },
+                            title: 'ARWEN - tRNA Gene Detection Tool',
+                            subtitle: 'Detects metazoan mitochondrial tRNA genes',
+                            reference: 'Reference: Laslett, D. and Canback, B. (2008) Bioinformatics, 24(2); 172-175',
+                            ad: {
+                                text: 'Do more mitochondrial phylogenetic analysis seamlessly with YR-MPE!',
+                                github: 'GitHub',
+                                gitee: 'Gitee'
+                            },
+                            upload: {
+                                text: 'Click to select file or drag and drop here',
+                                hint: 'Supports .fasta, .fa, .txt formats'
+                            },
+                            options: {
+                                title: 'Options',
+                                topology: 'Topology',
+                                circular: 'Circular (default)',
+                                linear: 'Linear',
+                                strand: 'Strand',
+                                both: 'Both (default)',
+                                sense: 'Sense',
+                                antisense: 'Antisense',
+                                geneticCode: 'Genetic Code',
+                                detection: 'Detection',
+                                output: 'Output',
+                                other: 'Other',
+                                tvloop: 'Search TV replacement loop tRNA',
+                                cloop7: '7-base C-loop only',
+                                reportPseudo: 'Report possible pseudogenes',
+                                mtx: 'Low scoring tRNA not reported',
+                                verbose: 'Verbose',
+                                showSeq: 'Show sequence',
+                                showStructure: 'Show secondary structure',
+                                fasta: 'FASTA format',
+                                batch: 'Batch mode',
+                                matchAcceptor: 'Amino-acyl acceptor matching',
+                                config: 'Show configuration'
+                            },
+                            geneticCodes: {
+                                metazoan: 'Metazoan mitochondrial (default)',
+                                vertebrate: 'Vertebrate mitochondrial',
+                                invertebrate: 'Invertebrate mitochondrial',
+                                standard: 'Standard',
+                                mammalian: 'Mammalian mitochondrial',
+                                yeast: 'Yeast mitochondrial',
+                                protozoan: 'Protozoan mitochondrial',
+                                ciliate: 'Ciliate',
+                                flatworm: 'Flatworm mitochondrial',
+                                euplotid: 'Euplotid',
+                                bacterial: 'Bacterial/Plant Chloroplast',
+                                altYeast: 'Alternative Yeast',
+                                ascidian: 'Ascidian mitochondrial',
+                                altFlatworm: 'Alternative Flatworm mitochondrial',
+                                blepharisma: 'Blepharisma',
+                                chlorophycean: 'Chlorophycean mitochondrial',
+                                trematode: 'Trematode mitochondrial',
+                                scenedesmus: 'Scenedesmus obliquus',
+                                thraustochytrium: 'Thraustochytrium'
+                            },
+                            run: 'Run ARWEN',
+                            processing: 'Processing',
+                            output: {
+                                title: 'Output',
+                                copy: 'Copy Log',
+                                copied: 'Copied',
+                                failed: 'Copy failed',
+                                waiting: 'Waiting for input...'
+                            },
+                            status: {
+                                loaded: 'WASM module loaded',
+                                aborted: 'WASM execution aborted',
+                                abortedText: 'Execution aborted: ',
+                                noFile: 'No file selected'
+                            },
+                            source: {
+                                title: 'ARWEN Source Code',
+                                downloadC: 'Download arwen.c',
+                                downloadWasm: 'Download WebAssembly files',
+                                compileCommand: 'Compile Command',
+                                sourceCode: 'Source Code Preview',
+                                note: 'Click buttons above to download complete source code'
+                            },
+                            about: {
+                                title: 'About ARWEN',
+                                overview: 'Overview',
+                                overviewText: 'ARWEN (A program to detect tRNA genes in metazoan mitochondrial nucleotide sequences) is a bioinformatics tool designed to detect tRNA genes in metazoan mitochondrial genomes. The tool was developed by Dean Laslett and Björn Canbäck and published in Bioinformatics in 2008.',
+                                features: 'Key Features',
+                                feature1Title: 'tRNA Gene Detection',
+                                feature1Text: 'Automatically identifies tRNA genes in mitochondrial genomes, including standard tRNAs and TV replacement loop tRNAs',
+                                feature2Title: 'Secondary Structure Prediction',
+                                feature2Text: 'Predicts and displays tRNA secondary structures, including stem-loop structures and base pairing',
+                                feature3Title: 'Multiple Genetic Codes',
+                                feature3Text: 'Supports various mitochondrial genetic codes for tRNA detection in different species',
+                                feature4Title: 'Flexible Configuration',
+                                feature4Text: 'Provides rich parameter options to adjust detection strategies according to research needs',
+                                tech: 'Technical Features',
+                                tech1: 'WebAssembly Implementation',
+                                tech1Text: 'Compiled C code to WebAssembly using Emscripten, runs directly in browser',
+                                tech2: 'High Performance',
+                                tech2Text: 'Optimized memory management, supports processing large mitochondrial genomes',
+                                tech3: 'Responsive Interface',
+                                tech3Text: 'Built with Vue3 framework for smooth user experience',
+                                tech4: 'Real-time Feedback',
+                                tech4Text: 'Provides detailed output information and status feedback'
+                            },
+                            version: 'Version'
+                        }
+                    }
+                };
+            },
+            computed: {
+                statusClass() {
+                    if (!this.moduleLoaded) return '';
+                    if (this.isProcessing) return 'processing';
+                    return 'ready';
+                }
+            },
+            methods: {
+                t(key) {
+                    const keys = key.split('.');
+                    let value = this.translations[this.language];
+                    for (const k of keys) {
+                        value = value[k];
+                    }
+                    return value;
+                },
+                handleFileSelect(event) {
+                    const files = event.target.files;
+                    if (files.length > 0) {
+                        this.selectedFile = files[0];
+                        this.output = this.t('output.waiting') + '\n' + this.t('upload.text');
+                    }
+                },
+                handleDrop(event) {
+                    this.isDragover = false;
+                    const files = event.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.selectedFile = files[0];
+                        this.output = this.t('output.waiting') + '\n' + this.t('upload.text');
+                    }
+                },
+                formatFileSize(bytes) {
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+                },
+                appendOutput(text) {
+                    this.output += text + '\n';
+                },
+                copyOutput() {
+                    // 尝试使用现代 Clipboard API
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(this.output)
+                            .then(() => {
+                                alert(this.t('output.copied') + ' ✓');
+                            })
+                            .catch(err => {
+                                console.error('Clipboard API failed:', err);
+                                // Fallback: 使用传统方法
+                                this.fallbackCopy();
+                            });
+                    } else {
+                        // Fallback: 使用传统方法
+                        this.fallbackCopy();
+                    }
+                },
+                fallbackCopy() {
+                    // 创建临时文本区域
+                    const textArea = document.createElement('textarea');
+                    textArea.value = this.output;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    
+                    // 选中文本
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        // 尝试执行复制命令
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            alert(this.t('output.copied') + ' ✓');
+                        } else {
+                            alert(this.t('output.failed') + ' ✗');
+                        }
+                    } catch (err) {
+                        console.error('Fallback copy failed:', err);
+                        alert(this.t('output.failed') + ': ' + err.message);
+                    }
+                    
+                    // 移除临时元素
+                    document.body.removeChild(textArea);
+                },
+                buildArguments() {
+                    const args = [];
+                    
+                    if (this.options.topology === 'linear') {
+                        args.push('-l');
+                    } else {
+                        args.push('-c');
+                    }
+                    
+                    if (this.options.strand === 'sense') {
+                        args.push('-s');
+                    } else if (this.options.strand === 'antisense') {
+                        args.push('-sc');
+                    } else {
+                        args.push('-d');
+                    }
+                    
+                    const codeMap = {
+                        'metazoan': '-gcmet',
+                        'vertebrate': '-gcvert',
+                        'invertebrate': '-gcinvert',
+                        'standard': '-gcstd',
+                        'mammalian': '-mtmam',
+                        'yeast': '-gcyeast',
+                        'protozoan': '-gcprot',
+                        'ciliate': '-gcciliate',
+                        'flatworm': '-gcflatworm',
+                        'euplotid': '-gceuplot',
+                        'bacterial': '-gcbact',
+                        'alt-yeast': '-gcaltyeast',
+                        'ascidian': '-gcascid',
+                        'alt-flatworm': '-gcaltflat',
+                        'blepharisma': '-gcblep',
+                        'chlorophycean': '-gcchloroph',
+                        'trematode': '-gctrem',
+                        'scenedesmus': '-gcscen',
+                        'thraustochytrium': '-gcthraust'
+                    };
+                    if (codeMap[this.options.geneticCode]) {
+                        args.push(codeMap[this.options.geneticCode]);
+                    }
+                    
+                    if (!this.options.tvloop) {
+                        args.push('-tv');
+                    }
+                    if (this.options.cloop7) {
+                        args.push('-c7');
+                    }
+                    if (this.options.reportPseudo) {
+                        args.push('-rp');
+                    }
+                    if (this.options.mtx) {
+                        args.push('-mtx');
+                    }
+                    
+                    if (this.options.verbose) {
+                        args.push('-v');
+                    }
+                    if (this.options.showSeq) {
+                        args.push('-seq');
+                    }
+                    if (this.options.showStructure) {
+                        args.push('-br');
+                    }
+                    if (this.options.fasta) {
+                        args.push('-fasta');
+                    }
+                    
+                    if (this.options.batch) {
+                        args.push('-w');
+                    }
+                    if (this.options.matchAcceptor) {
+                        args.push('-aa');
+                    }
+                    if (!this.options.config) {
+                        args.push('-q');
+                    }
+                    
+                    return args;
+                },
+                async runARWEN() {
+                    if (!this.selectedFile || !this.moduleLoaded || !Module) return;
+                    
+                    this.isProcessing = true;
+                    this.output = '';
+                    this.statusText = this.t('processing');
+                    
+                    try {
+                        if (typeof FS === 'undefined' || !FS.initialized) {
+                            throw new Error(this.t('status.aborted'));
+                        }
+                        
+                        const fileContent = await this.readFile(this.selectedFile);
+                        const fileName = 'input.fasta';
+                        FS.writeFile(fileName, fileContent);
+                        
+                        const args = [...this.buildArguments(), fileName];
+                        
+                        Module.callMain(args);
+                        
+                        this.statusText = this.t('status.loaded');
+                        this.statusClass = 'ready';
+                        
+                    } catch (error) {
+                        this.output = this.t('status.abortedText') + error.message + '\n\n' + (error.stack || '');
+                        this.statusText = this.t('status.aborted');
+                        this.statusClass = 'error';
+                        console.error('运行错误:', error);
+                    } finally {
+                        this.isProcessing = false;
+                    }
+                },
+                readFile(file) {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = (e) => reject();
+                        reader.readAsText(file);
+                    });
+                },
+                downloadSource() {
+                    fetch('arwen.c')
+                        .then(response => response.text())
+                        .then(text => {
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'arwen.c';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        });
+                },
+                downloadWasm() {
+                    // Download arwen.js and arwen.wasm
+                    ['arwen.js', 'arwen.wasm'].forEach(file => {
+                        fetch(file)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = file;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                            });
+                    });
+                },
+                loadSourcePreview() {
+                    fetch('arwen.c')
+                        .then(response => response.text())
+                        .then(text => {
+                            this.sourceCodePreview = text.substring(0, 5000) + '\n... (点击上方按钮下载完整代码)';
+                        })
+                        .catch(err => {
+                            this.sourceCodePreview = 'Failed to load source code: ' + err.message;
+                        });
+                }
+            },
+            mounted() {
+                window.app = this;
+                this.statusText = this.t('output.waiting');
+                this.loadSourcePreview();
+            },
+            watch: {
+                language() {
+                    this.statusText = this.moduleLoaded ? this.t('status.loaded') : this.t('output.waiting');
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
