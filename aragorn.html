@@ -600,30 +600,32 @@
         var Module = {
             noInitialRun: true,
             print: function(text) {
-                console.log(text);
+                console.log('[ARAGORN]', text);
                 if (window.app) {
                     window.app.appendOutput(text);
                 }
             },
             printErr: function(text) {
-                console.error(text);
+                console.error('[ARAGORN ERROR]', text);
                 if (window.app) {
                     window.app.appendOutput(text);
                 }
             },
             onRuntimeInitialized: function() {
-                console.log('WASM 模块加载完成');
+                console.log('[ARAGORN] WASM 模块加载完成');
                 if (window.app) {
                     window.app.moduleLoaded = true;
                     window.app.statusText = 'WASM 模块已加载';
+                    window.app.statusClass = 'ready';
                 }
             },
             onAbort: function(what) {
-                console.error('WASM 执行中止:', what);
+                console.error('[ARAGORN] WASM 执行中止:', what);
                 if (window.app) {
                     window.app.statusClass = 'error';
                     window.app.statusText = 'WASM 执行中止';
                     window.app.output = '执行中止: ' + what;
+                    window.app.isProcessing = false;
                 }
             }
         };
@@ -792,7 +794,15 @@
                     return args;
                 },
                 async runARAGORN() {
-                    if (!this.selectedFile || !Module) return;
+                    if (!this.selectedFile || !Module) {
+                        alert('请先选择文件或等待 WASM 模块加载');
+                        return;
+                    }
+
+                    if (!this.moduleLoaded) {
+                        alert('WASM 模块尚未加载完成，请稍后重试');
+                        return;
+                    }
 
                     this.isProcessing = true;
                     this.output = '';
@@ -808,9 +818,21 @@
                         FS.writeFile(fileName, fileContent);
 
                         const args = [...this.buildArguments(), fileName];
-                        console.log('参数:', args);
+                        console.log('运行参数:', args);
+                        console.log('开始执行 Module.callMain...');
+
+                        // 设置超时机制，防止程序挂起
+                        const timeoutId = setTimeout(() => {
+                            if (this.isProcessing) {
+                                this.output += '\n\n警告: 程序执行时间过长，可能已挂起。\n建议检查输入文件或减少文件大小。';
+                                this.statusText = '执行超时';
+                                this.isProcessing = false;
+                            }
+                        }, 30000); // 30秒超时
 
                         Module.callMain(args);
+                        clearTimeout(timeoutId);
+
                         this.statusText = '分析完成';
 
                     } catch (error) {
