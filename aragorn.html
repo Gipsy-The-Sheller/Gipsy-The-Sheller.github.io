@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARAGORN - tRNA/mtRNA/tmRNA 基因检测工具</title>
+    <title>ARAGORN - tRNA/tmRNA 基因检测工具</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -305,27 +305,174 @@
             font-size: 1rem;
             margin: 0;
         }
+
+        /* 源代码展示 */
+        .code-container {
+            background-color: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            padding: 30px;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .code-header h2 {
+            color: var(--gbif-green);
+            margin: 0;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-actions button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .code-actions button:hover {
+            background-color: var(--gbif-dark-green);
+        }
+
+        .code-section {
+            margin-bottom: 30px;
+        }
+
+        .code-section h3 {
+            color: var(--gbif-text);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--gbif-medium-gray);
+        }
+
+        .code-block {
+            background-color: #f5f5f5;
+            border: 1px solid var(--gbif-medium-gray);
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .compile-command {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+
+        .language-switch {
+            display: flex;
+            gap: 10px;
+        }
+
+        .language-switch button {
+            background: none;
+            border: 1px solid var(--gbif-medium-gray);
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .language-switch button.active {
+            background-color: var(--gbif-green);
+            color: white;
+            border-color: var(--gbif-green);
+        }
+
+        .language-switch button:hover:not(.active) {
+            background-color: var(--gbif-light-gray);
+        }
+
+        /* 广告横幅 */
+        .ad-banner {
+            background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--gbif-text);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--gbif-green);
+        }
+
+        .ad-banner a {
+            color: var(--gbif-green);
+            text-decoration: none;
+            font-weight: 600;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+
+        .ad-banner a:hover {
+            text-decoration: underline;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1>ARAGORN WebAssembly</h1>
-            <nav class="navigation">
-                <a href="index.html" class="navigation-link">分类学数据库</a>
-                <a href="tools.html" class="navigation-link">工具集</a>
-                <a href="aragorn.html" class="navigation-link active">ARAGORN</a>
-            </nav>
-        </div>
-    </header>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>ARAGORN WebAssembly</h1>
+                <nav class="navigation">
+                    <button :class="{ active: activeTab === 'main' }" @click="activeTab = 'main'">
+                        {{ t('tabs.main') }}
+                    </button>
+                    <button :class="{ active: activeTab === 'source' }" @click="activeTab = 'source'">
+                        {{ t('tabs.source') }}
+                    </button>
+                    <button :class="{ active: activeTab === 'about' }" @click="activeTab = 'about'">
+                        {{ t('tabs.about') }}
+                    </button>
+                    <div class="language-switch">
+                        <button :class="{ active: language === 'zh' }" @click="language = 'zh'">中文</button>
+                        <button :class="{ active: language === 'en' }" @click="language = 'en'">English</button>
+                    </div>
+                    <a href="index.html" class="navigation-link">{{ t('tabs.home') }}</a>
+                </nav>
+            </div>
+        </header>
 
-    <main class="main-content">
-        <div class="container">
-            <div id="app">
-                <div class="aragorn-container">
+        <main class="main-content">
+            <div class="container">
+                <!-- ARAGORN 主页面 -->
+                <div v-if="activeTab === 'main'" class="aragorn-container">
                     <div class="aragorn-header">
-                        <h2>ARAGORN - tRNA/mtRNA/tmRNA 基因检测工具</h2>
-                        <p>检测 tRNA、mtRNA 和 tmRNA 基因 | Reference: Laslett, D. and Canback, B. (2004) Nucleic Acids Research, 32;11-16</p>
+                        <div class="ad-banner">
+                            {{ t('ad.text') }} 
+                            <a href="https://github.com/Gipsy-The-Sheller/YR-MPE" target="_blank">{{ t('ad.github') }}</a> | 
+                            <a href="https://gitee.com/ZJXMolls/YR-MPE" target="_blank">{{ t('ad.gitee') }}</a>
+                        </div>
+                        <h2>{{ t('title') }}</h2>
+                        <p>{{ t('subtitle') }}</p>
+                        <p style="font-size: 0.9em; margin-top: 10px; color: var(--gbif-dark-gray);">
+                            {{ t('reference') }}
+                        </p>
                     </div>
 
                     <div class="upload-area" 
@@ -335,217 +482,199 @@
                          @dragleave.prevent="isDragover = false"
                          @drop.prevent="handleDrop"
                          @click="$refs.fileInput.click()">
-                        <input type="file" ref="fileInput" accept=".fasta,.fa,.gb,.txt" @change="handleFileSelect" style="display: none;">
+                        <input type="file" ref="fileInput" accept=".fasta,.fa,.txt,.gb,.gbk" @change="handleFileSelect" style="display: none;">
                         <div class="upload-icon">📁</div>
-                        <div class="upload-text">点击选择文件或拖放文件到此处</div>
-                        <div class="upload-hint">支持 .fasta, .fa, .gb, .txt 格式</div>
+                        <div class="upload-text">{{ t('upload.text') }}</div>
+                        <div class="upload-hint">{{ t('upload.hint') }}</div>
                     </div>
 
                     <div class="options-section">
-                        <h3>参数选项</h3>
+                        <h3>{{ t('options.title') }}</h3>
                         <div class="options-grid">
                             <div class="option-group">
-                                <h4>基因类型</h4>
+                                <h4>{{ t('options.geneType') }}</h4>
                                 <div class="checkbox-group">
                                     <label>
-                                        <input type="checkbox" v-model="options.searchTRNA" checked>
-                                        搜索 tRNA 基因（默认）
+                                        <input type="checkbox" v-model="options.searchtRNA">
+                                        {{ t('options.searchtRNA') }}
                                     </label>
                                     <label>
-                                        <input type="checkbox" v-model="options.searchTMRNA">
-                                        搜索 tmRNA 基因
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.searchMT">
-                                        搜索后生动物线粒体 tRNA
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.searchMTMAM">
-                                        搜索哺乳动物线粒体 tRNA
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.searchMTX">
-                                        后生动物线粒体（低评分不报告）
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.searchMTD">
-                                        报告反链重叠基因
+                                        <input type="checkbox" v-model="options.searchtmRNA">
+                                        {{ t('options.searchtmRNA') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>拓扑结构</h4>
+                                <h4>{{ t('options.topology') }}</h4>
                                 <div class="radio-group">
                                     <label>
-                                        <input type="radio" v-model="options.topology" value="circular" checked>
-                                        环形（默认）
+                                        <input type="radio" v-model="options.topology" value="circular">
+                                        {{ t('options.circular') }}
                                     </label>
                                     <label>
                                         <input type="radio" v-model="options.topology" value="linear">
-                                        线性
+                                        {{ t('options.linear') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>搜索链</h4>
+                                <h4>{{ t('options.strand') }}</h4>
                                 <div class="radio-group">
                                     <label>
-                                        <input type="radio" v-model="options.strand" value="both" checked>
-                                        双链（默认）
+                                        <input type="radio" v-model="options.strand" value="both">
+                                        {{ t('options.both') }}
                                     </label>
                                     <label>
                                         <input type="radio" v-model="options.strand" value="sense">
-                                        正链
+                                        {{ t('options.sense') }}
                                     </label>
                                     <label>
                                         <input type="radio" v-model="options.strand" value="antisense">
-                                        反链
+                                        {{ t('options.antisense') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>遗传密码表</h4>
+                                <h4>{{ t('options.mitochondrial') }}</h4>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" v-model="options.mt">
+                                        {{ t('options.mt') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.mtmam">
+                                        {{ t('options.mtmam') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.mtx">
+                                        {{ t('options.mtx') }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-group">
+                                <h4>{{ t('options.geneticCode') }}</h4>
                                 <div class="select-group">
                                     <select v-model="options.geneticCode">
-                                        <option value="">默认（标准）</option>
-                                        <option value="-gcstd">标准遗传密码</option>
-                                        <option value="-gcmet">后生动物线粒体</option>
-                                        <option value="-gcvert">脊椎动物线粒体</option>
-                                        <option value="-gcinvert">无脊椎动物线粒体</option>
-                                        <option value="-gcyeast">酵母线粒体</option>
-                                        <option value="-gcprot">原生动物线粒体</option>
-                                        <option value="-gcciliate">纤毛虫</option>
-                                        <option value="-gcflatworm">扁形动物线粒体</option>
-                                        <option value="-gceuplot">Euplotid</option>
-                                        <option value="-gcbact">细菌/植物叶绿体</option>
-                                        <option value="-gcaltyeast">替代酵母</option>
-                                        <option value="-gcascid">海鞘线粒体</option>
-                                        <option value="-gcaltflat">替代扁形动物线粒体</option>
-                                        <option value="-gcblep">Blepharisma</option>
-                                        <option value="-gcchloroph">绿藻线粒体</option>
-                                        <option value="-gctrem">吸虫线粒体</option>
-                                        <option value="-gcscen">Scenedesmus obliquus</option>
-                                        <option value="-gcthraust">Thraustochytrium</option>
-                                        <option value="-gcptero">Pterobranchia</option>
-                                        <option value="-gcgrac">Gracilibacteria</option>
-                                        <option value="-gcpach">Pachysolen</option>
-                                        <option value="-gckary">Karyorelict</option>
-                                        <option value="-gccond">Condylostoma</option>
-                                        <option value="-gcmeso">Mesodinium</option>
-                                        <option value="-gcperi">Peritrich</option>
-                                        <option value="-gcblast">Blastocrithidia</option>
-                                        <option value="-gcceph">Cephalodiscidae</option>
+                                        <option value="metazoan">{{ t('geneticCodes.metazoan') }}</option>
+                                        <option value="standard">{{ t('geneticCodes.standard') }}</option>
+                                        <option value="vertebrate">{{ t('geneticCodes.vertebrate') }}</option>
+                                        <option value="invertebrate">{{ t('geneticCodes.invertebrate') }}</option>
+                                        <option value="mammalian">{{ t('geneticCodes.mammalian') }}</option>
+                                        <option value="yeast">{{ t('geneticCodes.yeast') }}</option>
+                                        <option value="protozoan">{{ t('geneticCodes.protozoan') }}</option>
+                                        <option value="ciliate">{{ t('geneticCodes.ciliate') }}</option>
+                                        <option value="flatworm">{{ t('geneticCodes.flatworm') }}</option>
+                                        <option value="euplotid">{{ t('geneticCodes.euplotid') }}</option>
+                                        <option value="bacterial">{{ t('geneticCodes.bacterial') }}</option>
+                                        <option value="altYeast">{{ t('geneticCodes.altYeast') }}</option>
+                                        <option value="ascidian">{{ t('geneticCodes.ascidian') }}</option>
+                                        <option value="altFlatworm">{{ t('geneticCodes.altFlatworm') }}</option>
+                                        <option value="blepharisma">{{ t('geneticCodes.blepharisma') }}</option>
+                                        <option value="chlorophycean">{{ t('geneticCodes.chlorophycean') }}</option>
+                                        <option value="trematode">{{ t('geneticCodes.trematode') }}</option>
+                                        <option value="scenedesmus">{{ t('geneticCodes.scenedesmus') }}</option>
+                                        <option value="thraustochytrium">{{ t('geneticCodes.thraustochytrium') }}</option>
+                                        <option value="ptero">{{ t('geneticCodes.ptero') }}</option>
+                                        <option value="gracilibacteria">{{ t('geneticCodes.gracilibacteria') }}</option>
+                                        <option value="pachysolen">{{ t('geneticCodes.pachysolen') }}</option>
+                                        <option value="karyorelict">{{ t('geneticCodes.karyorelict') }}</option>
+                                        <option value="condylostoma">{{ t('geneticCodes.condylostoma') }}</option>
+                                        <option value="mesodinium">{{ t('geneticCodes.mesodinium') }}</option>
+                                        <option value="peritrich">{{ t('geneticCodes.peritrich') }}</option>
+                                        <option value="blastocrithidia">{{ t('geneticCodes.blastocrithidia') }}</option>
+                                        <option value="cephalodiscidae">{{ t('geneticCodes.cephalodiscidae') }}</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>内含子检测</h4>
+                                <h4>{{ t('options.intron') }}</h4>
                                 <div class="checkbox-group">
                                     <label>
-                                        <input type="checkbox" v-model="options.searchIntron">
-                                        搜索包含内含子的 tRNA
+                                        <input type="checkbox" v-model="options.intron">
+                                        {{ t('options.intron') }}
                                     </label>
                                     <label>
-                                        <input type="checkbox" v-model="options.intronOverlap">
-                                        允许长内含子重叠短 tRNA
+                                        <input type="checkbox" v-model="options.intronLong">
+                                        {{ t('options.intronLong') }}
                                     </label>
                                     <label>
-                                        <input type="checkbox" v-model="options.fixedIntron">
-                                        固定内含子在 C-loop 37-38
+                                        <input type="checkbox" v-model="options.intronFixed">
+                                        {{ t('options.intronFixed') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>检测选项</h4>
+                                <h4>{{ t('options.detection') }}</h4>
                                 <div class="checkbox-group">
                                     <label>
-                                        <input type="checkbox" v-model="options.tvloop" checked>
-                                        搜索 TV 替换环 tRNA
+                                        <input type="checkbox" v-model="options.tvloop">
+                                        {{ t('options.tvloop') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.cloop7">
-                                        仅搜索 7 碱基 C 环
+                                        {{ t('options.cloop7') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.strictSpacer">
-                                        严格间隔区规则
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.showScore">
-                                        显示评分
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.lowerThreshold">
-                                        降低评分阈值到 95%
+                                        {{ t('options.strictSpacer') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.reportPseudo">
-                                        标记可能假基因
+                                        {{ t('options.reportPseudo') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>输出格式</h4>
+                                <h4>{{ t('options.output') }}</h4>
                                 <div class="checkbox-group">
                                     <label>
                                         <input type="checkbox" v-model="options.verbose">
-                                        详细模式
+                                        {{ t('options.verbose') }}
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" v-model="options.score">
+                                        {{ t('options.score') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.showSeq">
-                                        显示序列
+                                        {{ t('options.showSeq') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.showStructure">
-                                        显示二级结构
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.svg">
-                                        生成 SVG 图像
+                                        {{ t('options.showStructure') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.fasta">
-                                        FASTA 格式
+                                        {{ t('options.fasta') }}
                                     </label>
                                     <label>
                                         <input type="checkbox" v-model="options.fastaOnly">
-                                        仅 FASTA 格式
+                                        {{ t('options.fastaOnly') }}
                                     </label>
                                 </div>
                             </div>
 
                             <div class="option-group">
-                                <h4>其他选项</h4>
+                                <h4>{{ t('options.other') }}</h4>
                                 <div class="checkbox-group">
                                     <label>
                                         <input type="checkbox" v-model="options.batch">
-                                        批处理模式
+                                        {{ t('options.batch') }}
                                     </label>
                                     <label>
-                                        <input type="checkbox" v-model="options.batchAdvanced">
-                                        批处理模式（高级）
+                                        <input type="checkbox" v-model="options.tmrnaDomain">
+                                        {{ t('options.tmrnaDomain') }}
                                     </label>
                                     <label>
-                                        <input type="checkbox" v-model="options.repeatName">
-                                        重复序列名称
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.showAcceptor">
-                                        显示氨酰基受体
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.showTRNADomain">
-                                        显示 tmRNA tRNA 结构域
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" v-model="options.config">
-                                        显示配置信息
+                                        <input type="checkbox" v-model="options.aaMatch">
+                                        {{ t('options.aaMatch') }}
                                     </label>
                                 </div>
                             </div>
@@ -556,47 +685,133 @@
                         <button class="run-button" 
                                 @click="runARAGORN" 
                                 :disabled="!selectedFile || !moduleLoaded || isProcessing">
-                            {{ isProcessing ? '处理中...' : '运行 ARAGORN' }}
+                            {{ isProcessing ? t('processing') : t('run') }}
                         </button>
                     </div>
 
                     <div class="output-section" id="output">
                         <div class="output-header">
-                            <h3 class="output-title">输出结果</h3>
+                            <h3 class="output-title">{{ t('output.title') }}</h3>
                             <button class="copy-button" @click="copyOutput" v-if="output">
-                                复制结果
+                                {{ t('output.copy') }}
                             </button>
                         </div>
-                        <pre>{{ output || '等待输入...' }}</pre>
+                        <pre>{{ output || t('output.waiting') }}</pre>
                     </div>
 
                     <div class="status-bar">
                         <div class="status">
                             <div class="status-indicator" :class="statusClass"></div>
-                            <span>{{ statusText || '等待输入...' }}</span>
+                            <span>{{ statusText }}</span>
                         </div>
                         <div class="file-info">
-                            {{ selectedFile ? `${selectedFile.name} (${formatFileSize(selectedFile.size)})` : '未选择文件' }}
+                            {{ selectedFile ? `${selectedFile.name} (${formatFileSize(selectedFile.size)})` : t('status.noFile') }}
                         </div>
                     </div>
                 </div>
+
+                <!-- 源代码页面 -->
+                <div v-if="activeTab === 'source'" class="code-container">
+                    <div class="code-header">
+                        <h2>{{ t('source.title') }}</h2>
+                        <div class="code-actions">
+                            <button @click="downloadSource">{{ t('source.downloadC') }}</button>
+                            <button @click="downloadWasm">{{ t('source.downloadWasm') }}</button>
+                        </div>
+                    </div>
+
+                    <div class="code-section">
+                        <h3>{{ t('source.compileCommand') }}</h3>
+                        <div class="compile-command">
+emcc aragorn1.2.41.c -o aragorn.js -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s IMPORTED_MEMORY -s STACK_SIZE=1048576 -s EXPORTED_RUNTIME_METHODS="['cwrap','callMain','UTF8ToString','stringToUTF8','getValue','setValue','HEAP8','HEAP16','HEAP32','HEAPU8','HEAPU16','HEAPU32','HEAPF32','HEAPF64']" -s EXPORTED_FUNCTIONS="['_main','_malloc','_free']" -s FILESYSTEM=1 -s FORCE_FILESYSTEM=1
+                        </div>
+                    </div>
+
+                    <div class="code-section">
+                        <h3>{{ t('source.sourceCode') }}</h3>
+                        <div class="code-block">
+                            <pre ref="sourceCodeRef">{{ sourceCodePreview }}</pre>
+                        </div>
+                        <p style="margin-top: 10px; color: var(--gbif-dark-gray);">
+                            {{ t('source.note') }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 关于页面 -->
+                <div v-if="activeTab === 'about'" class="about-page">
+                    <div class="business-card">
+                        <h1>徐志杰</h1>
+                        <p class="affiliation">东华大学 生物与医学工程学院</p>
+                        <p class="links">
+                            <a href="https://github.com/Gipsy-The-Sheller" target="_blank">GitHub 主页</a>
+                        </p>
+                        <div class="tags">
+                            <span class="tag">陆生贝类分类</span>
+                            <span class="tag">分子系统发生学</span>
+                            <span class="tag">生物信息学</span>
+                            <span class="tag">计算生物学</span>
+                        </div>
+                    </div>
+                    
+                    <h2>{{ t('about.title') }}</h2>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.overview') }}</h3>
+                        <p>{{ t('about.overviewText') }}</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.features') }}</h3>
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature1Title') }}</h4>
+                                <p>{{ t('about.feature1Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature2Title') }}</h4>
+                                <p>{{ t('about.feature2Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature3Title') }}</h4>
+                                <p>{{ t('about.feature3Text') }}</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>{{ t('about.feature4Title') }}</h4>
+                                <p>{{ t('about.feature4Text') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>{{ t('about.tech') }}</h3>
+                        <ul>
+                            <li><strong>{{ t('about.tech1') }}:</strong> {{ t('about.tech1Text') }}</li>
+                            <li><strong>{{ t('about.tech2') }}:</strong> {{ t('about.tech2Text') }}</li>
+                            <li><strong>{{ t('about.tech3') }}:</strong> {{ t('about.tech3Text') }}</li>
+                            <li><strong>{{ t('about.tech4') }}:</strong> {{ t('about.tech4Text') }}</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 徐志杰 | ARAGORN WebAssembly v1.2.41</p>
-        </div>
-    </footer>
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 徐志杰 | ARAGORN WebAssembly {{ t('version') }}</p>
+            </div>
+        </footer>
 
-    <div v-if="isProcessing" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">正在处理...</div>
+        <!-- 加载覆盖层 -->
+        <div v-if="isProcessing" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ t('processing') }}...</div>
+        </div>
     </div>
 
     <!-- 加载 ARAGORN WebAssembly 模块 -->
     <script>
+        // Module 配置
         var Module = {
             noInitialRun: true,
             print: function(text) {
@@ -615,14 +830,15 @@
                 console.log('WASM 模块加载完成');
                 if (window.app) {
                     window.app.moduleLoaded = true;
+                    window.app.statusText = window.app.t('status.loaded');
                 }
             },
             onAbort: function(what) {
                 console.error('WASM 执行中止:', what);
                 if (window.app) {
                     window.app.statusClass = 'error';
-                    window.app.statusText = 'WASM 执行中止';
-                    window.app.output = '执行中止: ' + what;
+                    window.app.statusText = window.app.t('status.aborted');
+                    window.app.output = window.app.t('status.abortedText') + what;
                 }
             }
         };
@@ -635,6 +851,7 @@
         createApp({
             data() {
                 return {
+                    activeTab: 'main',
                     selectedFile: null,
                     isDragover: false,
                     output: '',
@@ -642,39 +859,307 @@
                     isProcessing: false,
                     statusText: '',
                     statusClass: '',
+                    language: 'zh',
+                    sourceCodePreview: '',
                     options: {
-                        searchTRNA: true,
-                        searchTMRNA: false,
-                        searchMT: false,
-                        searchMTMAM: false,
-                        searchMTX: false,
-                        searchMTD: false,
+                        searchtRNA: true,
+                        searchtmRNA: false,
                         topology: 'circular',
                         strand: 'both',
-                        geneticCode: '',
-                        searchIntron: false,
-                        intronOverlap: false,
-                        fixedIntron: false,
+                        geneticCode: 'standard',
+                        mt: false,
+                        mtmam: false,
+                        mtx: false,
+                        intron: false,
+                        intronLong: false,
+                        intronFixed: false,
                         tvloop: true,
                         cloop7: false,
                         strictSpacer: false,
-                        showScore: false,
-                        lowerThreshold: false,
                         reportPseudo: false,
                         verbose: false,
+                        score: false,
                         showSeq: false,
                         showStructure: false,
-                        svg: false,
                         fasta: false,
                         fastaOnly: false,
                         batch: false,
-                        batchAdvanced: false,
-                        repeatName: false,
-                        showAcceptor: false,
-                        showTRNADomain: false,
-                        config: false
+                        tmrnaDomain: false,
+                        aaMatch: false
+                    },
+                    translations: {
+                        zh: {
+                            tabs: {
+                                main: '主页',
+                                source: '源代码',
+                                about: '关于',
+                                home: '返回主页'
+                            },
+                            title: 'ARAGORN - tRNA/tmRNA 基因检测工具',
+                            subtitle: '检测核酸序列中的 tRNA 和 tmRNA 基因',
+                            reference: '参考文献: Laslett, D. and Canback, B. (2004) Nucleic Acids Research, 32;11-16',
+                            ad: {
+                                text: '使用 YR-MPE 无缝进行更多线粒体系统发育分析！',
+                                github: 'GitHub',
+                                gitee: 'Gitee'
+                            },
+                            upload: {
+                                text: '点击选择文件或拖放文件到此处',
+                                hint: '支持 .fasta, .fa, .txt, .gb, .gbk 格式'
+                            },
+                            options: {
+                                title: '参数选项',
+                                geneType: '基因类型',
+                                searchtRNA: '搜索 tRNA 基因（默认）',
+                                searchtmRNA: '搜索 tmRNA 基因',
+                                topology: '拓扑结构',
+                                circular: '环形（默认）',
+                                linear: '线性',
+                                strand: '搜索链',
+                                both: '双链（默认）',
+                                sense: '正链',
+                                antisense: '反链',
+                                mitochondrial: '线粒体模式',
+                                mt: '后生动物线粒体 tRNA',
+                                mtmam: '哺乳动物线粒体 tRNA',
+                                mtx: '低评分 tRNA 不报告',
+                                geneticCode: '遗传密码表',
+                                intron: '内含子检测',
+                                intron: '检测含内含子的 tRNA',
+                                intronLong: '允许长内含子',
+                                intronFixed: '固定内含子位置',
+                                detection: '检测选项',
+                                output: '输出格式',
+                                other: '其他选项',
+                                tvloop: '搜索 TV 替换环 tRNA',
+                                cloop7: '仅搜索 7 碱基 C 环',
+                                strictSpacer: '严格间隔子模式',
+                                reportPseudo: '报告可能的假基因',
+                                verbose: '详细模式',
+                                score: '显示评分',
+                                showSeq: '显示序列',
+                                showStructure: '显示二级结构',
+                                fasta: 'FASTA 格式',
+                                fastaOnly: '仅 FASTA 格式',
+                                batch: '批处理模式',
+                                tmrnaDomain: '显示 tmRNA 结构域',
+                                aaMatch: '氨酰基受体匹配'
+                            },
+                            geneticCodes: {
+                                standard: '标准（默认）',
+                                metazoan: '后生动物线粒体',
+                                vertebrate: '脊椎动物线粒体',
+                                invertebrate: '无脊椎动物线粒体',
+                                mammalian: '哺乳动物线粒体',
+                                yeast: '酵母线粒体',
+                                protozoan: '原生动物线粒体',
+                                ciliate: '纤毛虫',
+                                flatworm: '扁形动物线粒体',
+                                euplotid: 'Euplotid',
+                                bacterial: '细菌/植物叶绿体',
+                                altYeast: '替代酵母',
+                                ascidian: '海鞘线粒体',
+                                altFlatworm: '替代扁形动物线粒体',
+                                blepharisma: 'Blepharisma',
+                                chlorophycean: '绿藻线粒体',
+                                trematode: '吸虫线粒体',
+                                scenedesmus: 'Scenedesmus obliquus',
+                                thraustochytrium: 'Thraustochytrium',
+                                ptero: 'Pterobranchia 线粒体',
+                                gracilibacteria: 'Gracilibacteria',
+                                pachysolen: 'Pachysolen tannophilus',
+                                karyorelict: 'Karyorelict',
+                                condylostoma: 'Condylostoma',
+                                mesodinium: 'Mesodinium',
+                                peritrich: 'Peritrich',
+                                blastocrithidia: 'Blastocrithidia',
+                                cephalodiscidae: 'Cephalodiscidae 线粒体 UAA-Tyr'
+                            },
+                            run: '运行 ARAGORN',
+                            processing: '处理中',
+                            output: {
+                                title: '输出结果',
+                                copy: '复制日志',
+                                copied: '已复制',
+                                failed: '复制失败',
+                                waiting: '等待输入...'
+                            },
+                            status: {
+                                loaded: 'WASM 模块已加载',
+                                aborted: 'WASM 执行中止',
+                                abortedText: '执行中止: ',
+                                noFile: '未选择文件'
+                            },
+                            source: {
+                                title: 'ARAGORN 源代码',
+                                downloadC: '下载 aragorn1.2.41.c',
+                                downloadWasm: '下载 WebAssembly 文件',
+                                compileCommand: '编译命令',
+                                sourceCode: '源代码预览',
+                                note: '点击上方按钮下载完整源代码'
+                            },
+                            about: {
+                                title: '关于 ARAGORN',
+                                overview: '工具概述',
+                                overviewText: 'ARAGORN (A program for the detection of transfer RNA and transfer-messenger RNA genes in nucleotide sequences) 是一个用于检测核酸序列中 tRNA 和 tmRNA 基因的生物信息学工具。该工具由 Dean Laslett 和 Björn Canbäck 开发，于 2004 年发表在 Nucleic Acids Research 期刊上。',
+                                features: '核心功能',
+                                feature1Title: 'tRNA/tmRNA 基因检测',
+                                feature1Text: '自动识别基因组中的 tRNA 和 tmRNA 基因，包括标准 tRNA、TV 替换环 tRNA 和 tmRNA',
+                                feature2Title: '二级结构预测',
+                                feature2Text: '预测并显示 tRNA 和 tmRNA 的二级结构，包括茎环结构和碱基配对',
+                                feature3Title: '多遗传密码表支持',
+                                feature3Text: '支持多种遗传密码表，适用于不同物种和线粒体的 tRNA 检测',
+                                feature4Title: '灵活参数配置',
+                                feature4Text: '提供丰富的参数选项，可根据研究需求调整检测策略',
+                                tech: '技术特色',
+                                tech1: 'WebAssembly 实现',
+                                tech1Text: '通过 Emscripten 将 C 语言代码编译为 WebAssembly，在浏览器中直接运行',
+                                tech2: '高性能计算',
+                                tech2Text: '优化了内存管理，支持处理大型基因组',
+                                tech3: '响应式界面',
+                                tech3Text: '采用 Vue3 框架，提供流畅的用户体验',
+                                tech4: '实时反馈',
+                                tech4Text: '提供详细的输出信息和状态反馈'
+                            },
+                            version: '版本 1.2.41'
+                        },
+                        en: {
+                            tabs: {
+                                main: 'Main',
+                                source: 'Source',
+                                about: 'About',
+                                home: 'Back to Home'
+                            },
+                            title: 'ARAGORN - tRNA/tmRNA Gene Detection Tool',
+                            subtitle: 'Detects tRNA and tmRNA genes in nucleotide sequences',
+                            reference: 'Reference: Laslett, D. and Canback, B. (2004) Nucleic Acids Research, 32;11-16',
+                            ad: {
+                                text: 'Do more mitochondrial phylogenetic analysis seamlessly with YR-MPE!',
+                                github: 'GitHub',
+                                gitee: 'Gitee'
+                            },
+                            upload: {
+                                text: 'Click to select file or drag and drop here',
+                                hint: 'Supports .fasta, .fa, .txt, .gb, .gbk formats'
+                            },
+                            options: {
+                                title: 'Options',
+                                geneType: 'Gene Type',
+                                searchtRNA: 'Search for tRNA genes (default)',
+                                searchtmRNA: 'Search for tmRNA genes',
+                                topology: 'Topology',
+                                circular: 'Circular (default)',
+                                linear: 'Linear',
+                                strand: 'Strand',
+                                both: 'Both (default)',
+                                sense: 'Sense',
+                                antisense: 'Antisense',
+                                mitochondrial: 'Mitochondrial Mode',
+                                mt: 'Metazoan mitochondrial tRNA',
+                                mtmam: 'Mammalian mitochondrial tRNA',
+                                mtx: 'Low scoring tRNA not reported',
+                                geneticCode: 'Genetic Code',
+                                intron: 'Intron Detection',
+                                intron: 'Detect tRNA with introns',
+                                intronLong: 'Allow long introns',
+                                intronFixed: 'Fixed intron position',
+                                detection: 'Detection',
+                                output: 'Output',
+                                other: 'Other',
+                                tvloop: 'Search TV replacement loop tRNA',
+                                cloop7: '7-base C-loop only',
+                                strictSpacer: 'Strict spacer mode',
+                                reportPseudo: 'Report possible pseudogenes',
+                                verbose: 'Verbose',
+                                score: 'Show score',
+                                showSeq: 'Show sequence',
+                                showStructure: 'Show secondary structure',
+                                fasta: 'FASTA format',
+                                fastaOnly: 'FASTA only',
+                                batch: 'Batch mode',
+                                tmrnaDomain: 'Show tmRNA domain',
+                                aaMatch: 'Amino-acyl acceptor matching'
+                            },
+                            geneticCodes: {
+                                standard: 'Standard (default)',
+                                metazoan: 'Metazoan mitochondrial',
+                                vertebrate: 'Vertebrate mitochondrial',
+                                invertebrate: 'Invertebrate mitochondrial',
+                                mammalian: 'Mammalian mitochondrial',
+                                yeast: 'Yeast mitochondrial',
+                                protozoan: 'Protozoan mitochondrial',
+                                ciliate: 'Ciliate',
+                                flatworm: 'Flatworm mitochondrial',
+                                euplotid: 'Euplotid',
+                                bacterial: 'Bacterial/Plant Chloroplast',
+                                altYeast: 'Alternative Yeast',
+                                ascidian: 'Ascidian mitochondrial',
+                                altFlatworm: 'Alternative Flatworm mitochondrial',
+                                blepharisma: 'Blepharisma',
+                                chlorophycean: 'Chlorophycean mitochondrial',
+                                trematode: 'Trematode mitochondrial',
+                                scenedesmus: 'Scenedesmus obliquus',
+                                thraustochytrium: 'Thraustochytrium',
+                                ptero: 'Pterobranchia mitochondrial',
+                                gracilibacteria: 'Gracilibacteria',
+                                pachysolen: 'Pachysolen tannophilus',
+                                karyorelict: 'Karyorelict',
+                                condylostoma: 'Condylostoma',
+                                mesodinium: 'Mesodinium',
+                                peritrich: 'Peritrich',
+                                blastocrithidia: 'Blastocrithidia',
+                                cephalodiscidae: 'Cephalodiscidae mitochondrial UAA-Tyr'
+                            },
+                            run: 'Run ARAGORN',
+                            processing: 'Processing',
+                            output: {
+                                title: 'Output',
+                                copy: 'Copy Log',
+                                copied: 'Copied',
+                                failed: 'Copy failed',
+                                waiting: 'Waiting for input...'
+                            },
+                            status: {
+                                loaded: 'WASM module loaded',
+                                aborted: 'WASM execution aborted',
+                                abortedText: 'Execution aborted: ',
+                                noFile: 'No file selected'
+                            },
+                            source: {
+                                title: 'ARAGORN Source Code',
+                                downloadC: 'Download aragorn1.2.41.c',
+                                downloadWasm: 'Download WebAssembly files',
+                                compileCommand: 'Compile Command',
+                                sourceCode: 'Source Code Preview',
+                                note: 'Click buttons above to download complete source code'
+                            },
+                            about: {
+                                title: 'About ARAGORN',
+                                overview: 'Overview',
+                                overviewText: 'ARAGORN (A program for the detection of transfer RNA and transfer-messenger RNA genes in nucleotide sequences) is a bioinformatics tool designed to detect tRNA and tmRNA genes in nucleotide sequences. The tool was developed by Dean Laslett and Björn Canbäck and published in Nucleic Acids Research in 2004.',
+                                features: 'Key Features',
+                                feature1Title: 'tRNA/tmRNA Gene Detection',
+                                feature1Text: 'Automatically identifies tRNA and tmRNA genes in genomes, including standard tRNAs, TV replacement loop tRNAs, and tmRNAs',
+                                feature2Title: 'Secondary Structure Prediction',
+                                feature2Text: 'Predicts and displays tRNA and tmRNA secondary structures, including stem-loop structures and base pairing',
+                                feature3Title: 'Multiple Genetic Codes',
+                                feature3Text: 'Supports various genetic codes for tRNA detection in different species and mitochondria',
+                                feature4Title: 'Flexible Configuration',
+                                feature4Text: 'Provides rich parameter options to adjust detection strategies according to research needs',
+                                tech: 'Technical Features',
+                                tech1: 'WebAssembly Implementation',
+                                tech1Text: 'Compiled C code to WebAssembly using Emscripten, runs directly in browser',
+                                tech2: 'High Performance',
+                                tech2Text: 'Optimized memory management, supports processing large genomes',
+                                tech3: 'Responsive Interface',
+                                tech3Text: 'Built with Vue3 framework for smooth user experience',
+                                tech4: 'Real-time Feedback',
+                                tech4Text: 'Provides detailed output information and status feedback'
+                            },
+                            version: 'Version 1.2.41'
+                        }
                     }
-                }
+                };
             },
             computed: {
                 statusClass() {
@@ -684,11 +1169,19 @@
                 }
             },
             methods: {
+                t(key) {
+                    const keys = key.split('.');
+                    let value = this.translations[this.language];
+                    for (const k of keys) {
+                        value = value[k];
+                    }
+                    return value;
+                },
                 handleFileSelect(event) {
                     const files = event.target.files;
                     if (files.length > 0) {
                         this.selectedFile = files[0];
-                        this.output = '等待输入...' + '\n点击选择文件或拖放文件到此处';
+                        this.output = this.t('output.waiting') + '\n' + this.t('upload.text');
                     }
                 },
                 handleDrop(event) {
@@ -696,7 +1189,7 @@
                     const files = event.dataTransfer.files;
                     if (files.length > 0) {
                         this.selectedFile = files[0];
-                        this.output = '等待输入...' + '\n点击选择文件或拖放文件到此处';
+                        this.output = this.t('output.waiting') + '\n' + this.t('upload.text');
                     }
                 },
                 formatFileSize(bytes) {
@@ -705,124 +1198,205 @@
                     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
                 },
                 appendOutput(text) {
-                    if (this.output === '等待输入...' || this.output === '等待输入...\n点击选择文件或拖放文件到此处') {
-                        this.output = '';
-                    }
                     this.output += text + '\n';
+                },
+                copyOutput() {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(this.output)
+                            .then(() => {
+                                alert(this.t('output.copied') + ' ✓');
+                            })
+                            .catch(err => {
+                                console.error('Clipboard API failed:', err);
+                                this.fallbackCopy();
+                            });
+                    } else {
+                        this.fallbackCopy();
+                    }
+                },
+                fallbackCopy() {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = this.output;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            alert(this.t('output.copied') + ' ✓');
+                        } else {
+                            alert(this.t('output.failed') + ' ✗');
+                        }
+                    } catch (err) {
+                        console.error('Fallback copy failed:', err);
+                        alert(this.t('output.failed') + ': ' + err.message);
+                    }
+                    
+                    document.body.removeChild(textArea);
                 },
                 buildArguments() {
                     const args = [];
-
+                    
                     // 基因类型
-                    const { searchTRNA, searchTMRNA, searchMT, searchMTMAM, searchMTX, searchMTD } = this.options;
-                    let geneTypeSet = false;
-
-                    if (searchMTMAM) {
-                        args.push('-mtmam');
-                        geneTypeSet = true;
-                    } else if (searchMTX) {
-                        args.push('-mtx');
-                        geneTypeSet = true;
-                    } else if (searchMT) {
-                        args.push('-mt');
-                        geneTypeSet = true;
+                    if (this.options.searchtmRNA) {
+                        args.push('-m');
                     }
-
-                    if (!geneTypeSet) {
-                        if (searchTRNA && searchTMRNA) {
-                            // 两者都选中，不添加参数（默认搜索所有）
-                        } else if (searchTRNA) {
-                            args.push('-t');
-                            geneTypeSet = true;
-                        } else if (searchTMRNA) {
-                            args.push('-m');
-                            geneTypeSet = true;
-                        } else {
-                            // 都没选中，搜索 tRNA
-                            args.push('-t');
-                            geneTypeSet = true;
-                        }
-                    } else {
-                        if (searchTMRNA) args.push('-m');
-                        if (searchTRNA) args.push('-t');
+                    if (this.options.searchtRNA) {
+                        args.push('-t');
                     }
-
-                    if (searchMTD) args.push('-mtd');
-
+                    
                     // 拓扑结构
-                    args.push(this.options.topology === 'linear' ? '-l' : '-c');
-
+                    if (this.options.topology === 'linear') {
+                        args.push('-l');
+                    } else {
+                        args.push('-c');
+                    }
+                    
                     // 搜索链
-                    const strand = this.options.strand;
-                    if (strand === 'sense') args.push('-s');
-                    else if (strand === 'antisense') args.push('-sc');
-                    else args.push('-d');
-
+                    if (this.options.strand === 'sense') {
+                        args.push('-s');
+                    } else if (this.options.strand === 'antisense') {
+                        args.push('-sc');
+                    } else {
+                        args.push('-d');
+                    }
+                    
+                    // 线粒体模式
+                    if (this.options.mtmam) {
+                        args.push('-mtmam');
+                    } else if (this.options.mt) {
+                        args.push('-mt');
+                    }
+                    if (this.options.mtx) {
+                        args.push('-mtx');
+                    }
+                    
                     // 遗传密码表
-                    if (this.options.geneticCode) args.push(this.options.geneticCode);
-
+                    const codeMap = {
+                        'metazoan': '-gcmet',
+                        'standard': '-gcstd',
+                        'vertebrate': '-gcvert',
+                        'invertebrate': '-gcinvert',
+                        'mammalian': '-mtmam',
+                        'yeast': '-gcyeast',
+                        'protozoan': '-gcprot',
+                        'ciliate': '-gcciliate',
+                        'flatworm': '-gcflatworm',
+                        'euplotid': '-gceuplot',
+                        'bacterial': '-gcbact',
+                        'altYeast': '-gcaltyeast',
+                        'ascidian': '-gcascid',
+                        'altFlatworm': '-gcaltflat',
+                        'blepharisma': '-gcblep',
+                        'chlorophycean': '-gcchloroph',
+                        'trematode': '-gctrem',
+                        'scenedesmus': '-gcscen',
+                        'thraustochytrium': '-gcthraust',
+                        'ptero': '-gcptero',
+                        'gracilibacteria': '-gcgrac',
+                        'pachysolen': '-gcpach',
+                        'karyorelict': '-gckary',
+                        'condylostoma': '-gccond',
+                        'mesodinium': '-gcmeso',
+                        'peritrich': '-gcperi',
+                        'blastocrithidia': '-gcblast',
+                        'cephalodiscidae': '-gcceph'
+                    };
+                    if (codeMap[this.options.geneticCode]) {
+                        args.push(codeMap[this.options.geneticCode]);
+                    }
+                    
                     // 内含子检测
-                    const { searchIntron, intronOverlap, fixedIntron } = this.options;
-                    if (searchIntron) {
-                        if (fixedIntron) {
-                            args.push(intronOverlap ? '-ifo' : '-if');
+                    if (this.options.intron) {
+                        if (this.options.intronLong && this.options.intronFixed) {
+                            args.push('-ifo');
+                        } else if (this.options.intronLong) {
+                            args.push('-io');
+                        } else if (this.options.intronFixed) {
+                            args.push('-if');
                         } else {
-                            args.push(intronOverlap ? '-io' : '-i');
+                            args.push('-i');
                         }
                     }
-
+                    
                     // 检测选项
-                    if (!this.options.tvloop) args.push('-tv');
-                    if (this.options.cloop7) args.push('-c7');
-                    if (this.options.strictSpacer) args.push('-ss');
-                    if (this.options.showScore) args.push('-e');
-                    if (this.options.lowerThreshold) args.push('-ps');
-                    if (this.options.reportPseudo) args.push('-rp');
-
-                    // 输出格式
-                    if (this.options.verbose) args.push('-v');
-                    if (this.options.showSeq) args.push('-seq');
-                    if (this.options.showStructure) args.push('-br');
-                    if (this.options.svg) args.push('-svg');
-                    if (this.options.fasta) args.push('-fasta');
-                    if (this.options.fastaOnly) args.push('-fo');
-
+                    if (!this.options.tvloop) {
+                        args.push('-tv');
+                    }
+                    if (this.options.cloop7) {
+                        args.push('-c7');
+                    }
+                    if (this.options.strictSpacer) {
+                        args.push('-ss');
+                    }
+                    if (this.options.reportPseudo) {
+                        args.push('-rp');
+                    }
+                    
+                    // 输出选项
+                    if (this.options.verbose) {
+                        args.push('-v');
+                    }
+                    if (this.options.score) {
+                        args.push('-e');
+                    }
+                    if (this.options.showSeq) {
+                        args.push('-seq');
+                    }
+                    if (this.options.showStructure) {
+                        args.push('-br');
+                    }
+                    if (this.options.fasta) {
+                        args.push('-fasta');
+                    }
+                    if (this.options.fastaOnly) {
+                        args.push('-fo');
+                    }
+                    
                     // 其他选项
-                    if (this.options.batch) args.push('-w');
-                    if (this.options.batchAdvanced) args.push('-wa');
-                    if (this.options.repeatName) args.push('-rn');
-                    if (this.options.showAcceptor) args.push('-aa');
-                    if (this.options.showTRNADomain) args.push('-a');
-                    if (!this.options.config) args.push('-q');
-
+                    if (this.options.batch) {
+                        args.push('-w');
+                    }
+                    if (this.options.tmrnaDomain) {
+                        args.push('-a');
+                    }
+                    if (this.options.aaMatch) {
+                        args.push('-aa');
+                    }
+                    
                     return args;
                 },
                 async runARAGORN() {
                     if (!this.selectedFile || !this.moduleLoaded || !Module) return;
-
+                    
                     this.isProcessing = true;
                     this.output = '';
-                    this.statusText = '正在分析序列...';
-
+                    this.statusText = this.t('processing');
+                    
                     try {
                         if (typeof FS === 'undefined' || !FS.initialized) {
-                            throw new Error('文件系统未初始化');
+                            throw new Error(this.t('status.aborted'));
                         }
-
+                        
                         const fileContent = await this.readFile(this.selectedFile);
                         const fileName = 'input.fasta';
                         FS.writeFile(fileName, fileContent);
-
+                        
                         const args = [...this.buildArguments(), fileName];
-
+                        
                         Module.callMain(args);
-
-                        this.statusText = '分析完成';
+                        
+                        this.statusText = this.t('status.loaded');
                         this.statusClass = 'ready';
-
+                        
                     } catch (error) {
-                        this.output = '错误: ' + error.message + '\n\n' + (error.stack || '');
-                        this.statusText = '发生错误';
+                        this.output = this.t('status.abortedText') + error.message + '\n\n' + (error.stack || '');
+                        this.statusText = this.t('status.aborted');
                         this.statusClass = 'error';
                         console.error('运行错误:', error);
                     } finally {
@@ -837,14 +1411,57 @@
                         reader.readAsText(file);
                     });
                 },
-                copyOutput() {
-                    navigator.clipboard.writeText(this.output);
-                    alert('结果已复制到剪贴板');
+                downloadSource() {
+                    fetch('aragorn1.2.41.c')
+                        .then(response => response.text())
+                        .then(text => {
+                            const blob = new Blob([text], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'aragorn1.2.41.c';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        });
+                },
+                downloadWasm() {
+                    ['aragorn.js', 'aragorn.wasm'].forEach(file => {
+                        fetch(file)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = file;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url);
+                            });
+                    });
+                },
+                loadSourcePreview() {
+                    fetch('aragorn1.2.41.c')
+                        .then(response => response.text())
+                        .then(text => {
+                            this.sourceCodePreview = text.substring(0, 5000) + '\n... (点击上方按钮下载完整代码)';
+                        })
+                        .catch(err => {
+                            this.sourceCodePreview = 'Failed to load source code: ' + err.message;
+                        });
                 }
             },
             mounted() {
                 window.app = this;
-                this.statusText = '等待输入...';
+                this.statusText = this.t('output.waiting');
+                this.loadSourcePreview();
+            },
+            watch: {
+                language() {
+                    this.statusText = this.moduleLoaded ? this.t('status.loaded') : this.t('output.waiting');
+                }
             }
         }).mount('#app');
     </script>
