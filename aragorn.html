@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARAGORN - WebAssembly 版本</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: var(--gbif-light-gray);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--gbif-green) 0%, var(--gbif-dark-green) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: var(--gbif-green);
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--gbif-green);
+            padding-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--gbif-green);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8fff8;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            background: #e8ffe8;
+            border-color: var(--gbif-dark-green);
+        }
+
+        .upload-area.dragover {
+            background: #d8ffd8;
+            border-color: var(--gbif-dark-green);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-content {
+            pointer-events: none;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--gbif-green);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--gbif-text);
+            font-size: 1.1em;
+        }
+
+        .upload-hint {
+            color: var(--gbif-dark-gray);
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .option-group {
+            background: #f8fff8;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--gbif-medium-gray);
+        }
+
+        .option-group h3 {
+            color: var(--gbif-green);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--gbif-text);
+            font-size: 0.95em;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: var(--gbif-green);
+            width: 18px;
+            height: 18px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--gbif-text);
+            font-size: 0.95em;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 10px;
+            accent-color: var(--gbif-green);
+            width: 18px;
+            height: 18px;
+        }
+
+        .select-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gbif-medium-gray);
+            border-radius: 6px;
+            font-size: 0.95em;
+            background: white;
+            cursor: pointer;
+        }
+
+        .run-button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--gbif-shadow);
+        }
+
+        .run-button:hover {
+            background-color: var(--gbif-dark-green);
+            transform: translateY(-2px);
+            box-shadow: var(--gbif-shadow-hover);
+        }
+
+        .run-button:active {
+            transform: translateY(0);
+        }
+
+        .run-button:disabled {
+            background: var(--gbif-medium-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .output-section {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 20px;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: var(--gbif-shadow);
+        }
+
+        .status-bar {
+            padding: 15px 30px;
+            background: var(--gbif-light-gray);
+            border-top: 1px solid var(--gbif-medium-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gbif-medium-gray);
+        }
+
+        .status-indicator.ready {
+            background: #4caf50;
+        }
+
+        .status-indicator.processing {
+            background: #ff9800;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.error {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .file-info {
+            color: var(--gbif-dark-gray);
+            font-size: 0.9em;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--gbif-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container" style="background: none; box-shadow: none; margin: 0; flex: 0; border-radius: 0;">
+            <h1>ARAGORN WebAssembly</h1>
+            <nav class="navigation">
+                <a href="index.html" class="navigation-link">分类学数据库</a>
+                <a href="tools.html" class="navigation-link">工具集</a>
+                <a href="aragorn.html" class="navigation-link active">ARAGORN</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="header">
+            <h1>ARAGORN WebAssembly</h1>
+            <p>检测 tRNA、mtRNA 和 tmRNA 基因</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Reference: Laslett, D. and Canback, B. (2004) Nucleic Acids Research, 32;11-16</p>
+        </div>
+
+        <div class="main-content">
+            <div class="section">
+                <h2>上传 FASTA 文件</h2>
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept=".fasta,.fa,.gb,.txt">
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">点击选择文件或拖放文件到此处</div>
+                        <div class="upload-hint">支持 .fasta, .fa, .gb, .txt 格式</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>参数选项</h2>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <h3>基因类型</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="searchTRNA" checked> 搜索 tRNA 基因（默认）</label>
+                            <label><input type="checkbox" id="searchTMRNA"> 搜索 tmRNA 基因</label>
+                            <label><input type="checkbox" id="searchMT"> 搜索后生动物线粒体 tRNA</label>
+                            <label><input type="checkbox" id="searchMTMAM"> 搜索哺乳动物线粒体 tRNA</label>
+                            <label><input type="checkbox" id="searchMTX"> 后生动物线粒体（低评分不报告）</label>
+                            <label><input type="checkbox" id="searchMTD"> 报告反链重叠基因</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>拓扑结构</h3>
+                        <div class="radio-group">
+                            <label><input type="radio" name="topology" value="circular" checked> 环形（默认）</label>
+                            <label><input type="radio" name="topology" value="linear"> 线性</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>搜索链</h3>
+                        <div class="radio-group">
+                            <label><input type="radio" name="strand" value="both" checked> 双链（默认）</label>
+                            <label><input type="radio" name="strand" value="sense"> 正链</label>
+                            <label><input type="radio" name="strand" value="antisense"> 反链</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>遗传密码表</h3>
+                        <div class="select-group">
+                            <select id="geneticCode">
+                                <option value="">默认（标准）</option>
+                                <option value="-gcstd">标准遗传密码</option>
+                                <option value="-gcmet">后生动物线粒体</option>
+                                <option value="-gcvert">脊椎动物线粒体</option>
+                                <option value="-gcinvert">无脊椎动物线粒体</option>
+                                <option value="-gcyeast">酵母线粒体</option>
+                                <option value="-gcprot">原生动物线粒体</option>
+                                <option value="-gcciliate">纤毛虫</option>
+                                <option value="-gcflatworm">扁形动物线粒体</option>
+                                <option value="-gceuplot">Euplotid</option>
+                                <option value="-gcbact">细菌/植物叶绿体</option>
+                                <option value="-gcaltyeast">替代酵母</option>
+                                <option value="-gcascid">海鞘线粒体</option>
+                                <option value="-gcaltflat">替代扁形动物线粒体</option>
+                                <option value="-gcblep">Blepharisma</option>
+                                <option value="-gcchloroph">绿藻线粒体</option>
+                                <option value="-gctrem">吸虫线粒体</option>
+                                <option value="-gcscen">Scenedesmus obliquus</option>
+                                <option value="-gcthraust">Thraustochytrium</option>
+                                <option value="-gcptero">Pterobranchia</option>
+                                <option value="-gcgrac">Gracilibacteria</option>
+                                <option value="-gcpach">Pachysolen</option>
+                                <option value="-gckary">Karyorelict</option>
+                                <option value="-gccond">Condylostoma</option>
+                                <option value="-gcmeso">Mesodinium</option>
+                                <option value="-gcperi">Peritrich</option>
+                                <option value="-gcblast">Blastocrithidia</option>
+                                <option value="-gcceph">Cephalodiscidae</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>内含子检测</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="searchIntron"> 搜索包含内含子的 tRNA</label>
+                            <label><input type="checkbox" id="intronOverlap"> 允许长内含子重叠短 tRNA</label>
+                            <label><input type="checkbox" id="fixedIntron"> 固定内含子在 C-loop 37-38</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>检测选项</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="tvloop"> 搜索 TV 替换环 tRNA</label>
+                            <label><input type="checkbox" id="cloop7"> 仅搜索 7 碱基 C 环</label>
+                            <label><input type="checkbox" id="strictSpacer"> 严格间隔区规则</label>
+                            <label><input type="checkbox" id="showScore"> 显示评分</label>
+                            <label><input type="checkbox" id="lowerThreshold"> 降低评分阈值到 95%</label>
+                            <label><input type="checkbox" id="reportPseudo"> 标记可能假基因</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>输出格式</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="verbose"> 详细模式</label>
+                            <label><input type="checkbox" id="showSeq"> 显示序列</label>
+                            <label><input type="checkbox" id="showStructure"> 显示二级结构</label>
+                            <label><input type="checkbox" id="svg"> 生成 SVG 图像</label>
+                            <label><input type="checkbox" id="fasta"> FASTA 格式</label>
+                            <label><input type="checkbox" id="fastaOnly"> 仅 FASTA 格式</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <h3>其他选项</h3>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="batch"> 批处理模式</label>
+                            <label><input type="checkbox" id="batchAdvanced"> 批处理模式（高级）</label>
+                            <label><input type="checkbox" id="repeatName"> 重复序列名称</label>
+                            <label><input type="checkbox" id="showAcceptor"> 显示氨酰基受体</label>
+                            <label><input type="checkbox" id="showTRNADomain"> 显示 tmRNA tRNA 结构域</label>
+                            <label><input type="checkbox" id="config"> 显示配置信息</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <button class="run-button" id="runButton" disabled>运行 ARAGORN</button>
+            </div>
+
+            <div class="section">
+                <h2>输出结果</h2>
+                <div class="output-section" id="output">等待输入...</div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">正在加载 WASM 模块...</span>
+            </div>
+            <div class="file-info" id="fileInfo">未选择文件</div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在处理...</div>
+    </div>
+
+    <script>
+        // 全局变量
+        let selectedFile = null;
+
+        // 全局函数 - 更新状态
+        function updateStatus(status, text) {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            if (statusIndicator && statusText) {
+                statusIndicator.className = 'status-indicator ' + status;
+                statusText.textContent = text;
+            }
+        }
+    </script>
+
+    <!-- 加载 WASM 模块 - 必须在定义 Module 对象之后 -->
+    <script>
+        // 针对ARAGORN程序特点的Module配置
+        var Module = {
+            noInitialRun: true,
+            print: function(text) {
+                console.log(text);
+                // 同时输出到页面
+                const output = document.getElementById('output');
+                if (output) {
+                    if (output.textContent === '等待输入...' || output.textContent === '正在处理...') {
+                        output.textContent = '';
+                    }
+                    output.textContent += text + '\n';
+                }
+            },
+            printErr: function(text) {
+                console.error(text);
+                // 同时输出到页面
+                const output = document.getElementById('output');
+                if (output) {
+                    if (output.textContent === '等待输入...' || output.textContent === '正在处理...') {
+                        output.textContent = '';
+                    }
+                    output.textContent += text + '\n';
+                }
+            },
+            onRuntimeInitialized: function() {
+                console.log('WASM 模块加载完成');
+                if (typeof Module.HEAP8 !== 'undefined') {
+                    console.log('内存大小:', Module.HEAP8.length / 1024 / 1024 + 'MB');
+                }
+                updateStatus('ready', 'WASM 模块已加载');
+                const runButton = document.getElementById('runButton');
+                if (runButton && selectedFile) {
+                    runButton.disabled = false;
+                }
+            },
+            onAbort: function(what) {
+                console.error('WASM 执行中止:', what);
+                updateStatus('error', 'WASM 执行中止');
+                const output = document.getElementById('output');
+                if (output) {
+                    output.textContent = '执行中止: ' + what;
+                }
+            }
+        };
+    </script>
+    <script src="aragorn.js"></script>
+
+    <!-- 应用逻辑 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const runButton = document.getElementById('runButton');
+            const output = document.getElementById('output');
+            const fileInfo = document.getElementById('fileInfo');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            console.log('DOM 已加载，初始化事件监听器');
+
+            // 更新运行按钮状态
+            function updateRunButton() {
+                runButton.disabled = !selectedFile || !Module;
+            }
+
+            // 文件选择处理
+            fileInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            // 拖放处理
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            // 处理选中的文件
+            function handleFile(file) {
+                selectedFile = file;
+                fileInfo.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+                output.textContent = '文件已加载，点击"运行 ARAGORN"开始分析';
+                updateRunButton();
+                console.log('文件已选择:', file.name);
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            // 构建命令行参数
+            function buildArguments() {
+                const args = [];  // 不包含程序名
+
+                // 基因类型
+                const searchTRNA = document.getElementById('searchTRNA').checked;
+                const searchTMRNA = document.getElementById('searchTMRNA').checked;
+                const searchMT = document.getElementById('searchMT').checked;
+                const searchMTMAM = document.getElementById('searchMTMAM').checked;
+                const searchMTX = document.getElementById('searchMTX').checked;
+                const searchMTD = document.getElementById('searchMTD').checked;
+
+                // 确定要搜索的基因类型
+                let geneTypeSet = false;
+                if (searchMTMAM) {
+                    args.push('-mtmam');
+                    geneTypeSet = true;
+                } else if (searchMTX) {
+                    args.push('-mtx');
+                    geneTypeSet = true;
+                } else if (searchMT) {
+                    args.push('-mt');
+                    geneTypeSet = true;
+                }
+
+                // tRNA 和 tmRNA 搜索
+                if (!geneTypeSet) {
+                    if (searchTRNA && !searchTMRNA) {
+                        args.push('-t');
+                        geneTypeSet = true;
+                    } else if (!searchTRNA && searchTMRNA) {
+                        args.push('-m');
+                        geneTypeSet = true;
+                    }
+                    // 如果都选中或都不选中，则默认搜索所有（不添加参数）
+                } else {
+                    // 如果已经设置了线粒体参数，仍然可以添加 tRNA/tmRNA
+                    if (searchTMRNA) {
+                        args.push('-m');
+                    }
+                    if (searchTRNA) {
+                        args.push('-t');
+                    }
+                }
+
+                if (searchMTD) {
+                    args.push('-mtd');
+                }
+
+                // 拓扑结构
+                const topology = document.querySelector('input[name="topology"]:checked').value;
+                if (topology === 'linear') {
+                    args.push('-l');
+                } else {
+                    args.push('-c');
+                }
+
+                // 搜索链
+                const strand = document.querySelector('input[name="strand"]:checked').value;
+                if (strand === 'sense') {
+                    args.push('-s');
+                } else if (strand === 'antisense') {
+                    args.push('-sc');
+                } else {
+                    args.push('-d');
+                }
+
+                // 遗传密码表
+                const geneticCode = document.getElementById('geneticCode').value;
+                if (geneticCode) {
+                    args.push(geneticCode);
+                }
+
+                // 内含子检测
+                const searchIntron = document.getElementById('searchIntron').checked;
+                const intronOverlap = document.getElementById('intronOverlap').checked;
+                const fixedIntron = document.getElementById('fixedIntron').checked;
+
+                if (searchIntron) {
+                    if (fixedIntron) {
+                        if (intronOverlap) {
+                            args.push('-ifo');
+                        } else {
+                            args.push('-if');
+                        }
+                    } else {
+                        if (intronOverlap) {
+                            args.push('-io');
+                        } else {
+                            args.push('-i');
+                        }
+                    }
+                }
+
+                // 检测选项
+                if (!document.getElementById('tvloop').checked) {
+                    args.push('-tv');
+                }
+                if (document.getElementById('cloop7').checked) {
+                    args.push('-c7');
+                }
+                if (document.getElementById('strictSpacer').checked) {
+                    args.push('-ss');
+                }
+                if (document.getElementById('showScore').checked) {
+                    args.push('-e');
+                }
+                if (document.getElementById('lowerThreshold').checked) {
+                    args.push('-ps');
+                }
+                if (document.getElementById('reportPseudo').checked) {
+                    args.push('-rp');
+                }
+
+                // 输出格式
+                if (document.getElementById('verbose').checked) {
+                    args.push('-v');
+                }
+                if (document.getElementById('showSeq').checked) {
+                    args.push('-seq');
+                }
+                if (document.getElementById('showStructure').checked) {
+                    args.push('-br');
+                }
+                if (document.getElementById('svg').checked) {
+                    args.push('-svg');
+                }
+                if (document.getElementById('fasta').checked) {
+                    args.push('-fasta');
+                }
+                if (document.getElementById('fastaOnly').checked) {
+                    args.push('-fo');
+                }
+
+                // 其他选项
+                if (document.getElementById('batch').checked) {
+                    args.push('-w');
+                }
+                if (document.getElementById('batchAdvanced').checked) {
+                    args.push('-wa');
+                }
+                if (document.getElementById('repeatName').checked) {
+                    args.push('-rn');
+                }
+                if (document.getElementById('showAcceptor').checked) {
+                    args.push('-aa');
+                }
+                if (document.getElementById('showTRNADomain').checked) {
+                    args.push('-a');
+                }
+                if (!document.getElementById('config').checked) {
+                    args.push('-q');
+                }
+
+                return args;
+            }
+
+            // 运行 ARAGORN
+            runButton.addEventListener('click', async function() {
+                if (!selectedFile || !Module) return;
+
+                loadingOverlay.style.display = 'flex';
+                output.textContent = '正在处理...';
+                updateStatus('processing', '正在分析序列...');
+
+                try {
+                    // 检查 FS 是否已初始化
+                    if (typeof FS === 'undefined' || !FS.initialized) {
+                        throw new Error('文件系统未初始化，请等待 WASM 模块完全加载');
+                    }
+
+                    // 读取文件内容
+                    const fileContent = await readFile(selectedFile);
+
+                    // 写入文件到虚拟文件系统
+                    const fileName = 'input.fasta';
+                    FS.writeFile(fileName, fileContent);
+
+                    // 构建参数
+                    const args = [];
+                    args.push(...buildArguments());
+                    args.push(fileName);
+
+                    console.log('即将调用 Module.callMain，参数:', args);
+
+                    // 清空输出区域
+                    output.textContent = '';
+
+                    // 直接调用，Module.print 会自动将输出显示在页面上
+                    Module.callMain(args);
+
+                    updateStatus('ready', '分析完成');
+
+                } catch (error) {
+                    output.textContent = '错误: ' + error.message + '\n\n' + (error.stack || '');
+                    updateStatus('error', '发生错误');
+                    console.error('运行错误:', error);
+                } finally {
+                    loadingOverlay.style.display = 'none';
+                }
+            });
+
+            function readFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject();
+                    reader.readAsText(file);
+                });
+            }
+
+            // 初始化时更新按钮状态
+            updateRunButton();
+            updateStatus('ready', 'WASM 模块加载中...');
+        });
+    </script>
+</body>
+</html>

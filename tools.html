@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WASMBioinfo - WebAssembly 生物信息学工具集</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, var(--gbif-green) 0%, var(--gbif-dark-green) 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: var(--gbif-shadow-hover);
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .tool-card {
+            background-color: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--gbif-shadow-hover);
+            border-color: var(--gbif-green);
+        }
+
+        .tool-header {
+            background: linear-gradient(135deg, var(--gbif-green) 0%, var(--gbif-dark-green) 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .tool-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .tool-body {
+            padding: 25px;
+        }
+
+        .tool-description {
+            color: var(--gbif-text);
+            margin-bottom: 20px;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .tool-features {
+            margin-bottom: 20px;
+        }
+
+        .tool-features h4 {
+            color: var(--gbif-dark-green);
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .tool-features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tool-features li {
+            color: var(--gbif-dark-gray);
+            padding: 6px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .tool-features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--gbif-green);
+            font-weight: bold;
+        }
+
+        .tool-footer {
+            padding: 20px;
+            background-color: var(--gbif-light-gray);
+            border-top: 1px solid var(--gbif-medium-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-button {
+            background-color: var(--gbif-green);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        .tool-button:hover {
+            background-color: var(--gbif-dark-green);
+        }
+
+        .tool-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tool-version {
+            color: var(--gbif-dark-gray);
+            font-size: 0.9rem;
+        }
+
+        .tool-reference {
+            color: var(--gbif-dark-gray);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .info-section {
+            background-color: var(--gbif-white);
+            border-radius: 8px;
+            box-shadow: var(--gbif-shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .info-section h2 {
+            color: var(--gbif-green);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .info-item {
+            background-color: var(--gbif-light-gray);
+            padding: 25px;
+            border-radius: 6px;
+            border-left: 4px solid var(--gbif-green);
+            text-align: center;
+        }
+
+        .info-item .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .info-item h3 {
+            color: var(--gbif-text);
+            margin-bottom: 10px;
+        }
+
+        .info-item p {
+            color: var(--gbif-dark-gray);
+            margin: 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <h1>WASMBioinfo</h1>
+                <nav class="navigation">
+                    <a href="index.html" class="navigation-link">分类学数据库</a>
+                    <a href="tools.html" class="navigation-link active">工具集</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="container">
+                <div class="hero-section">
+                    <h1>🧬 WebAssembly 生物信息学工具集</h1>
+                    <p>在浏览器中直接运行高性能的生物信息学分析工具</p>
+                    <p style="font-size: 0.95rem; opacity: 0.85;">
+                        所有工具均使用 WebAssembly 技术编译，无需安装任何软件
+                    </p>
+                </div>
+
+                <div class="tools-section">
+                    <div class="tools-grid">
+                        <!-- ARWEN 工具 -->
+                        <div class="tool-card" @click="navigateTo('arwen.html')">
+                            <div class="tool-header">
+                                <div class="tool-icon">🧬</div>
+                                <h2 class="tool-name">ARWEN</h2>
+                            </div>
+                            <div class="tool-body">
+                                <p class="tool-description">
+                                    检测后生动物线粒体 tRNA 基因的专用工具，专为线粒体基因组分析设计，支持多种遗传密码表和拓扑结构。
+                                </p>
+                                <div class="tool-features">
+                                    <h4>主要功能：</h4>
+                                    <ul>
+                                        <li>检测后生动物线粒体 tRNA 基因</li>
+                                        <li>支持多种遗传密码表（25+ 种）</li>
+                                        <li>环形/线性拓扑结构</li>
+                                        <li>双链/单链/反链搜索</li>
+                                        <li>TV 替换环 tRNA 检测</li>
+                                        <li>假基因检测与报告</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="tool-footer">
+                                <div class="tool-meta">
+                                    <span class="tool-version">版本: v1.2</span>
+                                    <span class="tool-reference">Bioinformatics 24(2):172-175</span>
+                                </div>
+                                <a href="arwen.html" class="tool-button">使用工具 →</a>
+                            </div>
+                        </div>
+
+                        <!-- ARAGORN 工具 -->
+                        <div class="tool-card" @click="navigateTo('aragorn.html')">
+                            <div class="tool-header">
+                                <div class="tool-icon">🔬</div>
+                                <h2 class="tool-name">ARAGORN</h2>
+                            </div>
+                            <div class="tool-body">
+                                <p class="tool-description">
+                                    综合性的 tRNA、mtRNA 和 tmRNA 基因检测工具，支持广泛的遗传密码表和复杂的搜索选项。
+                                </p>
+                                <div class="tool-features">
+                                    <h4>主要功能：</h4>
+                                    <ul>
+                                        <li>检测 tRNA、mtRNA、tmRNA 基因</li>
+                                        <li>25+ 种遗传密码表支持</li>
+                                        <li>内含子检测（多种模式）</li>
+                                        <li>二级结构可视化（括号表示）</li>
+                                        <li>SVG 图像生成</li>
+                                        <li>批处理模式支持</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="tool-footer">
+                                <div class="tool-meta">
+                                    <span class="tool-version">版本: v1.2.41</span>
+                                    <span class="tool-reference">Nucleic Acids Res 32:11-16</span>
+                                </div>
+                                <a href="aragorn.html" class="tool-button">使用工具 →</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>💡 技术优势</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="icon">🚀</div>
+                            <h3>高性能</h3>
+                            <p>WebAssembly 提供接近原生的执行速度，大幅提升分析效率</p>
+                        </div>
+                        <div class="info-item">
+                            <div class="icon">🌐</div>
+                            <h3>跨平台</h3>
+                            <p>无需安装，在任何现代浏览器中即可运行</p>
+                        </div>
+                        <div class="info-item">
+                            <div class="icon">🔒</div>
+                            <h3>隐私安全</h3>
+                            <p>所有数据处理在本地完成，无需上传到服务器</p>
+                        </div>
+                        <div class="info-item">
+                            <div class="icon">📱</div>
+                            <h3>移动友好</h3>
+                            <p>响应式设计，支持手机和平板设备</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>📚 引用文献</h2>
+                    <p style="text-align: center; margin-bottom: 20px; color: var(--gbif-dark-gray);">
+                        如果您在研究中使用了本工具，请引用以下文献：
+                    </p>
+                    <div style="background: var(--gbif-light-gray); padding: 20px; border-radius: 6px; border-left: 4px solid var(--gbif-green);">
+                        <p style="margin-bottom: 15px; color: var(--gbif-text);">
+                            <strong>ARWEN:</strong> Laslett, D. and Canback, B. (2008) ARWEN: a program to detect tRNA genes in metazoan mitochondrial nucleotide sequences. <em>Bioinformatics</em>, 24(2); 172-175.
+                        </p>
+                        <p style="margin: 0; color: var(--gbif-text);">
+                            <strong>ARAGORN:</strong> Laslett, D. and Canback, B. (2004) ARAGORN, a program for the detection of transfer RNA and transfer-messenger RNA genes in nucleotide sequences. <em>Nucleic Acids Research</em>, 32;11-16.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 徐志杰 | WASMBioinfo WebAssembly 工具集</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {}
+            },
+            methods: {
+                navigateTo(url) {
+                    window.location.href = url;
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
