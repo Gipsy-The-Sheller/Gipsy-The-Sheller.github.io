@@ -573,7 +573,7 @@
                     <div class="status-bar">
                         <div class="status">
                             <div class="status-indicator" :class="statusClass"></div>
-                            <span>{{ statusText }}</span>
+                            <span>{{ statusText || '等待输入...' }}</span>
                         </div>
                         <div class="file-info">
                             {{ selectedFile ? `${selectedFile.name} (${formatFileSize(selectedFile.size)})` : '未选择文件' }}
@@ -615,8 +615,6 @@
                 console.log('WASM 模块加载完成');
                 if (window.app) {
                     window.app.moduleLoaded = true;
-                    window.app.statusText = 'WASM 模块已加载';
-                    window.app.statusClass = 'ready';
                 }
             },
             onAbort: function(what) {
@@ -640,9 +638,9 @@
                     selectedFile: null,
                     isDragover: false,
                     output: '',
-                    isProcessing: false,
                     moduleLoaded: false,
-                    statusText: '正在加载 WASM 模块...',
+                    isProcessing: false,
+                    statusText: '',
                     statusClass: '',
                     options: {
                         searchTRNA: true,
@@ -680,9 +678,8 @@
             },
             computed: {
                 statusClass() {
-                    if (this.statusText.includes('加载')) return '';
+                    if (!this.moduleLoaded) return '';
                     if (this.isProcessing) return 'processing';
-                    if (this.statusText.includes('中止') || this.statusText.includes('错误')) return 'error';
                     return 'ready';
                 }
             },
@@ -691,6 +688,7 @@
                     const files = event.target.files;
                     if (files.length > 0) {
                         this.selectedFile = files[0];
+                        this.output = '等待输入...' + '\n点击选择文件或拖放文件到此处';
                     }
                 },
                 handleDrop(event) {
@@ -698,6 +696,7 @@
                     const files = event.dataTransfer.files;
                     if (files.length > 0) {
                         this.selectedFile = files[0];
+                        this.output = '等待输入...' + '\n点击选择文件或拖放文件到此处';
                     }
                 },
                 formatFileSize(bytes) {
@@ -706,7 +705,7 @@
                     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
                 },
                 appendOutput(text) {
-                    if (this.output === '等待输入...') {
+                    if (this.output === '等待输入...' || this.output === '等待输入...\n点击选择文件或拖放文件到此处') {
                         this.output = '';
                     }
                     this.output += text + '\n';
@@ -845,6 +844,7 @@
             },
             mounted() {
                 window.app = this;
+                this.statusText = '等待输入...';
             }
         }).mount('#app');
     </script>
