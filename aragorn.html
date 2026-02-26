@@ -730,15 +730,24 @@
                         geneTypeSet = true;
                     }
 
+                    // 如果没有指定任何线粒体参数，处理 tRNA 和 tmRNA
                     if (!geneTypeSet) {
-                        if (searchTRNA && !searchTMRNA) {
+                        if (searchTRNA && searchTMRNA) {
+                            // 两者都选中，不添加参数（默认搜索所有）
+                            console.log('搜索所有类型（默认）');
+                        } else if (searchTRNA) {
                             args.push('-t');
                             geneTypeSet = true;
-                        } else if (!searchTRNA && searchTMRNA) {
+                        } else if (searchTMRNA) {
                             args.push('-m');
+                            geneTypeSet = true;
+                        } else {
+                            // 都没选中，搜索 tRNA
+                            args.push('-t');
                             geneTypeSet = true;
                         }
                     } else {
+                        // 如果已经设置了线粒体参数，可以额外添加 tRNA/tmRNA
                         if (searchTMRNA) args.push('-m');
                         if (searchTRNA) args.push('-t');
                     }
@@ -828,18 +837,25 @@
                                 this.statusText = '执行超时';
                                 this.isProcessing = false;
                             }
-                        }, 30000); // 30秒超时
+                        }, 60000); // 60秒超时
 
+                        // 调用程序
                         Module.callMain(args);
-                        clearTimeout(timeoutId);
 
-                        this.statusText = '分析完成';
+                        // 使用 setTimeout 确保状态更新在下一个事件循环
+                        setTimeout(() => {
+                            clearTimeout(timeoutId);
+                            if (this.isProcessing) {
+                                this.statusText = '分析完成';
+                                this.isProcessing = false;
+                                console.log('ARAGORN 执行完成');
+                            }
+                        }, 100);
 
                     } catch (error) {
                         this.output = '错误: ' + error.message;
                         this.statusText = '发生错误';
                         console.error('运行错误:', error);
-                    } finally {
                         this.isProcessing = false;
                     }
                 },
