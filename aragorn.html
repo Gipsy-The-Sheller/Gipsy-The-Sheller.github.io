@@ -348,7 +348,7 @@
                                 <h4>基因类型</h4>
                                 <div class="checkbox-group">
                                     <label>
-                                        <input type="checkbox" v-model="options.searchTRNA">
+                                        <input type="checkbox" v-model="options.searchTRNA" checked>
                                         搜索 tRNA 基因（默认）
                                     </label>
                                     <label>
@@ -378,7 +378,7 @@
                                 <h4>拓扑结构</h4>
                                 <div class="radio-group">
                                     <label>
-                                        <input type="radio" v-model="options.topology" value="circular">
+                                        <input type="radio" v-model="options.topology" value="circular" checked>
                                         环形（默认）
                                     </label>
                                     <label>
@@ -392,7 +392,7 @@
                                 <h4>搜索链</h4>
                                 <div class="radio-group">
                                     <label>
-                                        <input type="radio" v-model="options.strand" value="both">
+                                        <input type="radio" v-model="options.strand" value="both" checked>
                                         双链（默认）
                                     </label>
                                     <label>
@@ -464,7 +464,7 @@
                                 <h4>检测选项</h4>
                                 <div class="checkbox-group">
                                     <label>
-                                        <input type="checkbox" v-model="options.tvloop">
+                                        <input type="checkbox" v-model="options.tvloop" checked>
                                         搜索 TV 替换环 tRNA
                                     </label>
                                     <label>
@@ -600,19 +600,19 @@
         var Module = {
             noInitialRun: true,
             print: function(text) {
-                console.log('[ARAGORN]', text);
+                console.log(text);
                 if (window.app) {
                     window.app.appendOutput(text);
                 }
             },
             printErr: function(text) {
-                console.error('[ARAGORN ERROR]', text);
+                console.error(text);
                 if (window.app) {
                     window.app.appendOutput(text);
                 }
             },
             onRuntimeInitialized: function() {
-                console.log('[ARAGORN] WASM 模块加载完成');
+                console.log('WASM 模块加载完成');
                 if (window.app) {
                     window.app.moduleLoaded = true;
                     window.app.statusText = 'WASM 模块已加载';
@@ -620,12 +620,11 @@
                 }
             },
             onAbort: function(what) {
-                console.error('[ARAGORN] WASM 执行中止:', what);
+                console.error('WASM 执行中止:', what);
                 if (window.app) {
                     window.app.statusClass = 'error';
                     window.app.statusText = 'WASM 执行中止';
                     window.app.output = '执行中止: ' + what;
-                    window.app.isProcessing = false;
                 }
             }
         };
@@ -730,11 +729,9 @@
                         geneTypeSet = true;
                     }
 
-                    // 如果没有指定任何线粒体参数，处理 tRNA 和 tmRNA
                     if (!geneTypeSet) {
                         if (searchTRNA && searchTMRNA) {
                             // 两者都选中，不添加参数（默认搜索所有）
-                            console.log('搜索所有类型（默认）');
                         } else if (searchTRNA) {
                             args.push('-t');
                             geneTypeSet = true;
@@ -747,7 +744,6 @@
                             geneTypeSet = true;
                         }
                     } else {
-                        // 如果已经设置了线粒体参数，可以额外添加 tRNA/tmRNA
                         if (searchTMRNA) args.push('-m');
                         if (searchTRNA) args.push('-t');
                     }
@@ -803,15 +799,7 @@
                     return args;
                 },
                 async runARAGORN() {
-                    if (!this.selectedFile || !Module) {
-                        alert('请先选择文件或等待 WASM 模块加载');
-                        return;
-                    }
-
-                    if (!this.moduleLoaded) {
-                        alert('WASM 模块尚未加载完成，请稍后重试');
-                        return;
-                    }
+                    if (!this.selectedFile || !this.moduleLoaded || !Module) return;
 
                     this.isProcessing = true;
                     this.output = '';
@@ -819,7 +807,7 @@
 
                     try {
                         if (typeof FS === 'undefined' || !FS.initialized) {
-                            throw new Error('文件系统未初始化，请等待 WASM 模块完全加载');
+                            throw new Error('文件系统未初始化');
                         }
 
                         const fileContent = await this.readFile(this.selectedFile);
@@ -827,35 +815,18 @@
                         FS.writeFile(fileName, fileContent);
 
                         const args = [...this.buildArguments(), fileName];
-                        console.log('运行参数:', args);
-                        console.log('开始执行 Module.callMain...');
 
-                        // 设置超时机制，防止程序挂起
-                        const timeoutId = setTimeout(() => {
-                            if (this.isProcessing) {
-                                this.output += '\n\n警告: 程序执行时间过长，可能已挂起。\n建议检查输入文件或减少文件大小。';
-                                this.statusText = '执行超时';
-                                this.isProcessing = false;
-                            }
-                        }, 60000); // 60秒超时
-
-                        // 调用程序
                         Module.callMain(args);
 
-                        // 使用 setTimeout 确保状态更新在下一个事件循环
-                        setTimeout(() => {
-                            clearTimeout(timeoutId);
-                            if (this.isProcessing) {
-                                this.statusText = '分析完成';
-                                this.isProcessing = false;
-                                console.log('ARAGORN 执行完成');
-                            }
-                        }, 100);
+                        this.statusText = '分析完成';
+                        this.statusClass = 'ready';
 
                     } catch (error) {
-                        this.output = '错误: ' + error.message;
+                        this.output = '错误: ' + error.message + '\n\n' + (error.stack || '');
                         this.statusText = '发生错误';
+                        this.statusClass = 'error';
                         console.error('运行错误:', error);
+                    } finally {
                         this.isProcessing = false;
                     }
                 },
